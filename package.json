@@ -11,16 +11,18 @@
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",
-    "@react-three/fiber": "^8.17.10",
+    "@react-three/fiber": "^8.18.0",
     "@react-three/postprocessing": "^2.16.7",
     "framer-motion": "^12.38.0",
+    "lightweight-charts": "^5.1.0",
     "lucide-react": "^1.9.0",
     "postprocessing": "^6.35.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.14.2",
     "recharts": "^3.8.1",
-    "three": "^0.166.1"
+    "three": "^0.166.1",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
