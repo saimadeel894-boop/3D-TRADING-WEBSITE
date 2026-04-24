@@ -98,8 +98,8 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 10,
+              justifyContent: 'flex-start',
+              gap: 24,
               padding: '10px 12px',
               borderRadius: 999,
               border: '1px solid rgba(0,180,255,0.08)',
@@ -108,10 +108,10 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
               cursor: 'none',
             }}
           >
-            {items.map((it) => {
+            {items.slice(0, 4).map((it) => {
               const up = it.change >= 0
               return (
-                <div key={it.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <div key={it.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 150 }}>
                   <div style={{ fontWeight: 800, color: 'var(--text)' }}>{it.symbol}</div>
                   <div style={{ color: 'rgba(223,240,255,0.82)' }}>{fmt(it.price)}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: up ? 'var(--green)' : 'var(--red)' }}>

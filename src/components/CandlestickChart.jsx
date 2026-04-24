@@ -1,5 +1,66 @@
-import { useEffect, useRef } from 'react'
-import { CandlestickSeries, ColorType, CrosshairMode, createChart } from 'lightweight-charts'
+import { useEffect, useMemo, useRef } from 'react'
+
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n))
+}
+
+function ema(values, period) {
+  const k = 2 / (period + 1)
+  const out = []
+  let prev = values[0] ?? 0
+  for (let i = 0; i < values.length; i += 1) {
+    const v = values[i]
+    prev = i === 0 ? v : v * k + prev * (1 - k)
+    out.push(prev)
+  }
+  return out
+}
+
+function rsi(closes, period = 14) {
+  if (closes.length < period + 2) return closes.map(() => 50)
+  let gains = 0
+  let losses = 0
+  for (let i = 1; i <= period; i += 1) {
+    const d = closes[i] - closes[i - 1]
+    if (d >= 0) gains += d
+    else losses -= d
+  }
+  let avgG = gains / period
+  let avgL = losses / period
+  const out = [50]
+  for (let i = period + 1; i < closes.length; i += 1) {
+    const d = closes[i] - closes[i - 1]
+    const g = d > 0 ? d : 0
+    const l = d < 0 ? -d : 0
+    avgG = (avgG * (period - 1) + g) / period
+    avgL = (avgL * (period - 1) + l) / period
+    const rs = avgL === 0 ? 999 : avgG / avgL
+    out.push(100 - 100 / (1 + rs))
+  }
+  while (out.length < closes.length) out.unshift(out[0] ?? 50)
+  return out
+}
+
+function genSeedCandles(count = 80, start = 68000) {
+  const arr = []
+  let p = start
+  const now = Date.now()
+  for (let i = 0; i < count; i += 1) {
+    const o = p
+    const d = (Math.random() - 0.5) * 0.008
+    const c = o * (1 + d)
+    const h = Math.max(o, c) * (1 + Math.random() * 0.002)
+    const l = Math.min(o, c) * (1 - Math.random() * 0.002)
+    const v = 300 + Math.random() * 1800
+    arr.push({ o, h, l, c, v, t: now - (count - i) * 60_000 })
+    p = c
+  }
+  return arr
+}
+
+function fmt(n, d = 2) {
+  return Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
+}
 
 export default function CandlestickChart({
   pair = 'BTC/USDT',
@@ -10,96 +71,176 @@ export default function CandlestickChart({
   intervals = ['1m', '5m', '15m', '1h', '4h', '1d'],
   onInterval,
 }) {
-  const containerRef = useRef(null)
-  const chartRef = useRef(null)
-  const seriesRef = useRef(null)
+  const canvasRef = useRef(null)
+  const frameRef = useRef(0)
+  const dataRef = useRef(genSeedCandles(80))
+
+  const mergedCandles = useMemo(() => {
+    if (Array.isArray(candles) && candles.length >= 20) return candles.slice(-120)
+    return dataRef.current
+  }, [candles])
 
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-    const { width, height } = container.getBoundingClientRect()
-    const chart = createChart(container, {
-      width: Math.max(300, Math.floor(width)),
-      height: Math.max(320, Math.floor(height)),
-      layout: {
-        background: { type: ColorType.Solid, color: '#020203' },
-        textColor: '#94a3b8',
-      },
-      grid: {
-        vertLines: { color: 'rgba(0,242,255,0.05)' },
-        horzLines: { color: 'rgba(0,242,255,0.05)' },
-      },
-      crosshair: {
-        mode: CrosshairMode.Normal,
-        vertLine: { color: 'rgba(0,242,255,0.18)' },
-        horzLine: { color: 'rgba(0,242,255,0.18)' },
-      },
-      rightPriceScale: { borderColor: 'rgba(0,242,255,0.15)' },
-      timeScale: { borderColor: 'rgba(0,242,255,0.15)', timeVisible: true },
-    })
-    const seriesOptions = {
-      upColor: '#00FF41',
-      downColor: '#FF3131',
-      borderUpColor: '#00FF41',
-      borderDownColor: '#FF3131',
-      wickUpColor: '#00FF41',
-      wickDownColor: '#FF3131',
-    }
-    const series =
-      typeof chart.addCandlestickSeries === 'function'
-        ? chart.addCandlestickSeries(seriesOptions)
-        : chart.addSeries(CandlestickSeries, seriesOptions)
-    chartRef.current = chart
-    seriesRef.current = series
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const parent = canvas.parentElement
+    if (!parent) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
 
-    const ro = new ResizeObserver(() => {
-      const r = container.getBoundingClientRect()
-      chart.applyOptions({
-        width: Math.max(300, Math.floor(r.width)),
-        height: Math.max(320, Math.floor(r.height)),
-      })
-    })
-    ro.observe(container)
+    const render = () => {
+      const w = canvas.width
+      const h = canvas.height
+      if (!w || !h) return
+
+      ctx.fillStyle = '#060e1a'
+      ctx.fillRect(0, 0, w, h)
+
+      const priceH = Math.floor(h * 0.68)
+      const volTop = Math.floor(h * 0.68)
+      const volH = Math.floor(h * 0.20)
+      const rsiTop = volTop + volH
+      const rsiH = Math.floor(h * 0.12)
+      const xPad = 56
+      const rightPad = 80
+      const chartW = w - xPad - rightPad
+
+      const data = mergedCandles
+      if (!data.length) return
+
+      const minP = Math.min(...data.map((c) => c.l))
+      const maxP = Math.max(...data.map((c) => c.h))
+      const pRange = Math.max(1e-9, maxP - minP)
+      const yOf = (p) => 18 + ((maxP + pRange * 0.08 - p) / (pRange * 1.16)) * (priceH - 26)
+
+      ctx.strokeStyle = 'rgba(0,180,255,0.06)'
+      ctx.lineWidth = 1
+      for (let i = 0; i <= 5; i += 1) {
+        const y = 18 + ((priceH - 26) * i) / 5
+        ctx.beginPath()
+        ctx.moveTo(xPad, y)
+        ctx.lineTo(w - rightPad, y)
+        ctx.stroke()
+      }
+
+      const step = chartW / data.length
+      const cw = clamp(step * 0.62, 4, 9)
+      const maxV = Math.max(...data.map((c) => c.v))
+
+      for (let i = 0; i < data.length; i += 1) {
+        const c = data[i]
+        const x = xPad + i * step + (step - cw) / 2
+        const up = c.c >= c.o
+        const col = up ? '#00e676' : '#ff3d71'
+        const yO = yOf(c.o)
+        const yC = yOf(c.c)
+        const yH = yOf(c.h)
+        const yL = yOf(c.l)
+
+        ctx.strokeStyle = col
+        ctx.beginPath()
+        ctx.moveTo(x + cw / 2, yH)
+        ctx.lineTo(x + cw / 2, yL)
+        ctx.stroke()
+        ctx.fillStyle = col
+        ctx.fillRect(x, Math.min(yO, yC), cw, Math.max(2, Math.abs(yC - yO)))
+
+        const vh = (c.v / maxV) * (volH - 8)
+        ctx.fillStyle = up ? 'rgba(0,230,118,0.22)' : 'rgba(255,61,113,0.2)'
+        ctx.fillRect(x, volTop + volH - vh, cw, vh)
+      }
+
+      const closes = data.map((c) => c.c)
+      const e9 = ema(closes, 9)
+      const e21 = ema(closes, 21)
+      const r = rsi(closes, 14)
+
+      const drawLine = (vals, col) => {
+        ctx.beginPath()
+        for (let i = 0; i < vals.length; i += 1) {
+          const x = xPad + i * step + step / 2
+          const y = yOf(vals[i])
+          if (i === 0) ctx.moveTo(x, y)
+          else ctx.lineTo(x, y)
+        }
+        ctx.strokeStyle = col
+        ctx.lineWidth = 1.6
+        ctx.stroke()
+      }
+      drawLine(e9, 'rgba(139,92,246,0.8)')
+      drawLine(e21, 'rgba(0,212,255,0.6)')
+
+      ctx.strokeStyle = 'rgba(0,180,255,0.06)'
+      ctx.beginPath()
+      ctx.moveTo(xPad, rsiTop)
+      ctx.lineTo(w - rightPad, rsiTop)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(xPad, rsiTop + rsiH)
+      ctx.lineTo(w - rightPad, rsiTop + rsiH)
+      ctx.stroke()
+
+      const rY = (v) => rsiTop + ((100 - v) / 100) * rsiH
+      ctx.beginPath()
+      for (let i = 0; i < r.length; i += 1) {
+        const x = xPad + i * step + step / 2
+        const y = rY(r[i])
+        if (i === 0) ctx.moveTo(x, y)
+        else ctx.lineTo(x, y)
+      }
+      ctx.strokeStyle = 'rgba(240,180,41,0.78)'
+      ctx.lineWidth = 1.3
+      ctx.stroke()
+    }
+
+    const resize = () => {
+      canvas.width = Math.max(1, Math.floor(canvas.offsetWidth))
+      canvas.height = Math.max(1, Math.floor(canvas.offsetHeight))
+      render()
+    }
+
+    const tick = () => {
+      render()
+      frameRef.current = requestAnimationFrame(tick)
+    }
+
+    resize()
+    const ro = new ResizeObserver(resize)
+    ro.observe(parent)
+    frameRef.current = requestAnimationFrame(tick)
 
     return () => {
       ro.disconnect()
-      chart.remove()
-      chartRef.current = null
-      seriesRef.current = null
+      cancelAnimationFrame(frameRef.current)
     }
-  }, [pair])
+  }, [mergedCandles])
 
-  useEffect(() => {
-    if (!seriesRef.current) return
-    if (!Array.isArray(candles) || !candles.length) {
-      seriesRef.current.setData([])
-      return
-    }
-    seriesRef.current.setData(
-      candles.map((c) => ({
-        time: Math.floor(c.t / 1000),
-        open: c.o,
-        high: c.h,
-        low: c.l,
-        close: c.c,
-      })),
-    )
-  }, [candles])
+  const last = mergedCandles[mergedCandles.length - 1]
 
   return (
-    <div className="glass" style={{ borderRadius: 18, padding: 12, height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>{pair}</div>
+    <div className="glass" style={{ borderRadius: 18, padding: 0, height: '100%', overflow: 'hidden' }}>
+      <div
+        style={{
+          background: 'rgba(6,14,26,0.9)',
+          borderBottom: '1px solid rgba(0,180,255,0.1)',
+          padding: '10px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
+        <div>
+          <div style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>{pair}</div>
+          <div className="mono" style={{ fontSize: 10, color: 'var(--muted)', marginTop: 3 }}>
+            O: {last ? fmt(last.o) : '—'} H: {last ? fmt(last.h) : '—'} L: {last ? fmt(last.l) : '—'} C: {last ? fmt(last.c) : '—'}
+          </div>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div
-            className="pill mono"
-            style={{
-              color: status === 'connected' ? 'var(--green)' : status === 'disconnected' ? 'var(--red)' : 'var(--gold)',
-            }}
-          >
+          <div className="pill mono" style={{ color: status === 'connected' ? 'var(--green)' : status === 'disconnected' ? 'var(--red)' : 'var(--gold)' }}>
             {isLoading ? 'LOADING' : status.toUpperCase()}
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             {intervals.map((it) => {
               const active = it.toLowerCase() === interval.toLowerCase()
               return (
@@ -127,18 +268,13 @@ export default function CandlestickChart({
           </div>
         </div>
       </div>
-      <div
-        style={{
-          position: 'relative',
-          height: 'calc(100% - 34px)',
-          minHeight: 420,
-          borderRadius: 14,
-          overflow: 'hidden',
-          border: '1px solid var(--border)',
-          background: 'rgba(0,0,0,0.12)',
-        }}
-      >
-        <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+      <div style={{ position: 'relative', height: 'calc(100% - 66px)', minHeight: 360, overflow: 'hidden' }}>
+        <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
+        <div style={{ position: 'absolute', right: 12, top: 10, display: 'flex', gap: 8 }}>
+          <span className="pill mono" style={{ color: 'rgba(139,92,246,0.9)', background: 'rgba(139,92,246,0.12)' }}>EMA 9/21</span>
+          <span className="pill mono" style={{ color: 'rgba(240,180,41,0.92)', background: 'rgba(240,180,41,0.14)' }}>RSI</span>
+          <span className="pill mono" style={{ color: 'rgba(0,212,255,0.92)', background: 'rgba(0,212,255,0.12)' }}>VOL MA</span>
+        </div>
       </div>
     </div>
   )

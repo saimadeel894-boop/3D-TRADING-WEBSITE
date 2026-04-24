@@ -117,8 +117,12 @@ export default function ThreeBackground() {
     <div
       style={{
         position: 'fixed',
-        inset: 0,
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
         zIndex: 0,
+        opacity: 0.45,
         pointerEvents: 'none',
       }}
     >

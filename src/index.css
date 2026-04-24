@@ -115,15 +115,10 @@ body {
   inset: 0;
   pointer-events: none;
   background: repeating-linear-gradient(
-    to bottom,
-    rgba(223, 240, 255, 0.04),
-    rgba(223, 240, 255, 0.04) 1px,
-    rgba(1, 4, 9, 0) 3px,
-    rgba(1, 4, 9, 0) 6px
+    0deg, transparent, transparent 3px,
+    rgba(0,212,255,0.008) 3px, rgba(0,212,255,0.008) 4px
   );
-  opacity: 0.12;
-  mix-blend-mode: overlay;
-  z-index: 5;
+  z-index: 2;
 }
 
 .noise::after {
