@@ -96,8 +96,12 @@ export default function CandlestickChart({ pair = 'BTC/USD', basePrice = 67842 }
     let w = 0
     let h = 0
     let dpr = 1
+    let resizeRaf = 0
+    let resizing = false
 
     const resize = () => {
+      if (resizing) return
+      resizing = true
       const rect = canvas.getBoundingClientRect()
       dpr = Math.min(2, window.devicePixelRatio || 1)
       w = Math.max(1, Math.floor(rect.width))
@@ -105,11 +109,17 @@ export default function CandlestickChart({ pair = 'BTC/USD', basePrice = 67842 }
       canvas.width = Math.floor(w * dpr)
       canvas.height = Math.floor(h * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      resizing = false
     }
 
-    const ro = new ResizeObserver(resize)
+    const scheduleResize = () => {
+      cancelAnimationFrame(resizeRaf)
+      resizeRaf = requestAnimationFrame(resize)
+    }
+
+    const ro = new ResizeObserver(scheduleResize)
     ro.observe(canvas)
-    resize()
+    scheduleResize()
 
     const pad = { l: 64, r: 68, t: 16, b: 14 }
 
@@ -305,6 +315,7 @@ export default function CandlestickChart({ pair = 'BTC/USD', basePrice = 67842 }
     rafRef.current = requestAnimationFrame(draw)
     return () => {
       cancelAnimationFrame(rafRef.current)
+      cancelAnimationFrame(resizeRaf)
       ro.disconnect()
     }
   }, [candles, pair, basePrice])
