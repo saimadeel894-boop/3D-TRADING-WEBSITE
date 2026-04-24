@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState } from 'react'
+import { memo, useMemo } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react'
 
@@ -24,9 +24,7 @@ function fmt(n, d) {
 
 function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
   const nav = useNavigate()
-  const [items, setItems] = useState(ticker || [])
-
-  useEffect(() => setItems(ticker || []), [ticker])
+  const items = ticker || []
 
   const tabs = useMemo(
     () => [

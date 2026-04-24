@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import TradingTerminal from './pages/TradingTerminal.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import P2PMarketplace from './pages/P2PMarketplace.jsx'
@@ -50,54 +49,40 @@ function Cursor() {
 }
 
 function PageShell({ children }) {
-  return (
-    <motion.div
-      className="min-h-screen scanlines noise"
-      initial={{ opacity: 0, filter: 'blur(10px)' }}
-      animate={{ opacity: 1, filter: 'blur(0px)' }}
-      exit={{ opacity: 0, filter: 'blur(12px)' }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {children}
-    </motion.div>
-  )
+  return <div className="min-h-screen scanlines noise">{children}</div>
 }
 
 export default function App() {
-  const location = useLocation()
-
   return (
     <>
       <Cursor />
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route
-            path="/"
-            element={
-              <PageShell>
-                <TradingTerminal />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <PageShell>
-                <AdminDashboard />
-              </PageShell>
-            }
-          />
-          <Route
-            path="/p2p"
-            element={
-              <PageShell>
-                <P2PMarketplace />
-              </PageShell>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AnimatePresence>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <PageShell>
+              <TradingTerminal />
+            </PageShell>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <PageShell>
+              <AdminDashboard />
+            </PageShell>
+          }
+        />
+        <Route
+          path="/p2p"
+          element={
+            <PageShell>
+              <P2PMarketplace />
+            </PageShell>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </>
   )
 }
