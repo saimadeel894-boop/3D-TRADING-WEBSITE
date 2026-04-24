@@ -39,31 +39,29 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
   )
 
   return (
-    <div style={{ position: 'relative', zIndex: 10, padding: '14px 16px 10px' }}>
+    <div style={{ position: 'relative', zIndex: 1, padding: '10px 16px 8px' }}>
       <div
         className="glass"
         style={{
-          borderRadius: 22,
-          padding: 12,
+          borderRadius: 18,
+          padding: '8px 12px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 12,
+          minHeight: 52,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 280 }}>
           <HexLogo />
           <div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ fontWeight: 900, letterSpacing: '-0.03em', fontSize: 16 }}>
                 VERTEX<span style={{ color: 'var(--cyan)' }}>PRO</span>
               </div>
               <span className="pill mono" style={{ color: 'var(--gold)' }}>
                 ELITE TRADING SYSTEM
               </span>
-            </div>
-            <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
-              Low-latency execution • Escrow-grade security • Admin power suite
             </div>
           </div>
         </div>
@@ -108,12 +106,23 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
               cursor: 'none',
             }}
           >
-            {items.slice(0, 4).map((it) => {
+            {items.slice(0, 4).map((it, idx) => {
               const up = it.change >= 0
               return (
-                <div key={it.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 150 }}>
+                <div
+                  key={it.symbol}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    gap: 2,
+                    minWidth: 120,
+                    borderRight: idx < 3 ? '1px solid rgba(0,180,255,0.15)' : 'none',
+                    paddingRight: idx < 3 ? 16 : 0,
+                  }}
+                >
                   <div style={{ fontWeight: 800, color: 'var(--text)' }}>{it.symbol}</div>
-                  <div style={{ color: 'rgba(223,240,255,0.82)' }}>{fmt(it.price)}</div>
+                  <div style={{ color: 'rgba(223,240,255,0.82)' }}>${fmt(it.price)}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: up ? 'var(--green)' : 'var(--red)' }}>
                     {up ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}
                     {up ? '+' : ''}

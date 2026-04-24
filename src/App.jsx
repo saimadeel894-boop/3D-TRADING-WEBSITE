@@ -11,13 +11,13 @@ function Cursor() {
   const pos = useRef({ x: 0, y: 0 })
   const ring = useRef({ x: 0, y: 0 })
   const raf = useRef(0)
+  const dirty = useRef(false)
 
   useEffect(() => {
     const onMove = (e) => {
       pos.current.x = e.clientX
       pos.current.y = e.clientY
-      const d = dotRef.current
-      if (d) d.style.transform = `translate3d(${pos.current.x}px, ${pos.current.y}px, 0)`
+      dirty.current = true
     }
 
     const tick = () => {
@@ -25,6 +25,11 @@ function Cursor() {
       ring.current.y += (pos.current.y - ring.current.y) * 0.14
       const r = ringRef.current
       if (r) r.style.transform = `translate3d(${ring.current.x}px, ${ring.current.y}px, 0)`
+      if (dirty.current) {
+        const d = dotRef.current
+        if (d) d.style.transform = `translate3d(${pos.current.x}px, ${pos.current.y}px, 0)`
+        dirty.current = false
+      }
       raf.current = requestAnimationFrame(tick)
     }
 

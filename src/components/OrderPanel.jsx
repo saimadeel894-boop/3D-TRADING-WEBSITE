@@ -82,8 +82,8 @@ function OrderPanel({
   }
 
   const execCol = tab === 'SELL' ? 'var(--red)' : tab === 'LIMIT' ? 'var(--gold)' : 'var(--green)'
-  const asks = useMemo(() => withTotals(book?.asks), [book])
-  const bids = useMemo(() => withTotals(book?.bids), [book])
+  const asks = useMemo(() => withTotals((book?.asks || []).slice(0, 5)), [book])
+  const bids = useMemo(() => withTotals((book?.bids || []).slice(0, 5)), [book])
   const askMax = asks.length ? asks[asks.length - 1].total || 1 : 1
   const bidMax = bids.length ? bids[bids.length - 1].total || 1 : 1
 
@@ -262,10 +262,9 @@ function OrderPanel({
           Order Book
         </div>
 
-        <div className="mono" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, color: 'var(--muted)', fontSize: 11, marginBottom: 6 }}>
+        <div className="mono" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, color: 'var(--muted)', fontSize: 11, marginBottom: 6 }}>
           <div>Price</div>
           <div style={{ textAlign: 'right' }}>Size</div>
-          <div style={{ textAlign: 'right' }}>Total</div>
         </div>
 
         <div style={{ display: 'grid', gap: 6 }}>
@@ -274,10 +273,9 @@ function OrderPanel({
             return (
               <div key={`a-${i}`} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', padding: '7px 8px', border: '1px solid rgba(255,255,255,0.02)', background: 'rgba(255,255,255,0.01)' }}>
                 <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 100)}%`, background: 'rgba(255,61,113,0.10)', right: 0, marginLeft: 'auto' }} />
-                <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, alignItems: 'center' }}>
+                <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, alignItems: 'center' }}>
                   <div style={{ color: 'var(--red)', fontWeight: 700 }}>${fmt(r.price)}</div>
                   <div style={{ textAlign: 'right' }}>{fmt(r.size, 3)}</div>
-                  <div style={{ textAlign: 'right' }}>{fmt(r.total, 3)}</div>
                 </div>
               </div>
             )
@@ -292,10 +290,9 @@ function OrderPanel({
             return (
               <div key={`b-${i}`} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', padding: '7px 8px', border: '1px solid rgba(255,255,255,0.02)', background: 'rgba(255,255,255,0.01)' }}>
                 <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 100)}%`, background: 'rgba(0,230,118,0.10)', right: 0, marginLeft: 'auto' }} />
-                <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, alignItems: 'center' }}>
+                <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, alignItems: 'center' }}>
                   <div style={{ color: 'var(--green)', fontWeight: 700 }}>${fmt(r.price)}</div>
                   <div style={{ textAlign: 'right' }}>{fmt(r.size, 3)}</div>
-                  <div style={{ textAlign: 'right' }}>{fmt(r.total, 3)}</div>
                 </div>
               </div>
             )

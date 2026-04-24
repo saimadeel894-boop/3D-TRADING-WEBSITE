@@ -72,7 +72,6 @@ export default function CandlestickChart({
   onInterval,
 }) {
   const canvasRef = useRef(null)
-  const frameRef = useRef(0)
   const dataRef = useRef(genSeedCandles(80))
 
   const mergedCandles = useMemo(() => {
@@ -87,6 +86,7 @@ export default function CandlestickChart({
     if (!parent) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+    let frame = 0
 
     const render = () => {
       const w = canvas.width
@@ -199,19 +199,14 @@ export default function CandlestickChart({
       render()
     }
 
-    const tick = () => {
-      render()
-      frameRef.current = requestAnimationFrame(tick)
-    }
-
     resize()
     const ro = new ResizeObserver(resize)
     ro.observe(parent)
-    frameRef.current = requestAnimationFrame(tick)
+    frame = requestAnimationFrame(render)
 
     return () => {
       ro.disconnect()
-      cancelAnimationFrame(frameRef.current)
+      cancelAnimationFrame(frame)
     }
   }, [mergedCandles])
 

@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ThreeBackground from '../components/ThreeBackground.jsx'
 import TopNav from '../components/TopNav.jsx'
-import { usePlatformStats } from '../hooks/usePlatformStats.js'
 import { useMultiTicker } from '../hooks/useMultiTicker.js'
 
 function Bar({ v, col }) {
@@ -23,7 +22,6 @@ function Badge({ children, col }) {
 
 export default function AdminDashboard() {
   const nav = useNavigate()
-  const stats = usePlatformStats()
   const { tickers } = useMultiTicker()
 
   const ticker = useMemo(() => {
@@ -35,17 +33,15 @@ export default function AdminDashboard() {
     }))
   }, [tickers])
 
-  const kpis = useMemo(() => {
-    const vol = stats.totalVolume || 0
-    const volText =
-      vol >= 1e9 ? `$${(vol / 1e9).toFixed(2)}B` : vol >= 1e6 ? `$${(vol / 1e6).toFixed(2)}M` : `$${vol.toFixed(0)}`
-    return [
-      { label: 'Total Volume (BTC 24h)', value: volText, top: 'var(--cyan)' },
-      { label: 'Active Users', value: String(stats.activeUsers), top: 'var(--green)' },
-      { label: 'Revenue', value: `$${(stats.revenue / 1000).toFixed(0)}K`, top: 'var(--gold)' },
-      { label: 'Open Positions', value: String(stats.openPositions), top: 'var(--purple)' },
-    ]
-  }, [stats])
+  const kpis = useMemo(
+    () => [
+      { label: 'Volume', value: '$8.42M', top: '#00d4ff' },
+      { label: 'Users', value: '1,284', top: '#00e676' },
+      { label: 'Revenue', value: '$24,180', top: '#f0b429' },
+      { label: 'Escrow', value: '847', top: '#8b5cf6' },
+    ],
+    [],
+  )
 
   const sessions = useMemo(
     () => [
@@ -128,7 +124,7 @@ export default function AdminDashboard() {
           <div className="adminKpis" style={{ marginTop: 14 }}>
             {kpis.map((k) => (
               <div key={k.label} className="glass glass-hover" style={{ borderRadius: 18, padding: 14, position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', inset: 0, borderTop: `3px solid ${k.top}` }} />
+                <div style={{ position: 'absolute', inset: 0, borderTop: `2px solid ${k.top}` }} />
                 <div className="mono" style={{ color: 'var(--muted)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
                   {k.label}
                 </div>

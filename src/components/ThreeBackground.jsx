@@ -59,7 +59,7 @@ function Particles() {
     const count = 1000
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
-    const c1 = new THREE.Color('#00d4ff')
+    const c1 = new THREE.Color('#33ecff')
     const c2 = new THREE.Color('#8b5cf6')
     const c3 = new THREE.Color('#f0b429')
     for (let i = 0; i < count; i += 1) {
@@ -79,10 +79,10 @@ function Particles() {
     g.setAttribute('position', new THREE.BufferAttribute(positions, 3))
     g.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     const m = new THREE.PointsMaterial({
-      size: 0.02,
+      size: 0.06,
       vertexColors: true,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     })
@@ -122,7 +122,7 @@ export default function ThreeBackground() {
         width: '100%',
         height: '100%',
         zIndex: 0,
-        opacity: 0.45,
+        opacity: 0.6,
         pointerEvents: 'none',
       }}
     >

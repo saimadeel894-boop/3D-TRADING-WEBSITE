@@ -13,23 +13,25 @@ export default function BottomBar({ positions, trades, alerts, onClose }) {
   const icon = (k) => (k === 'risk' ? <AlertTriangle size={14} /> : k === 'bell' ? <Bell size={14} /> : <ShieldCheck size={14} />)
 
   return (
-    <div style={{ position: 'relative', zIndex: 10, padding: '10px 16px 14px' }}>
+    <div style={{ position: 'relative', zIndex: 1, flexShrink: 0 }}>
       <div
         className="glass"
         style={{
-          borderRadius: 18,
-          padding: 12,
-          display: 'grid',
-          gridTemplateColumns: '1.15fr 1fr 1fr',
+          height: 120,
+          borderRadius: 0,
+          padding: '10px 16px',
+          background: 'rgba(4,10,20,0.97)',
+          borderTop: '1px solid rgba(0,180,255,0.1)',
+          display: 'flex',
           gap: 12,
         }}
       >
-        <section>
+        <section style={{ flex: 1, minWidth: 0 }}>
           <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 8 }}>
             Open Positions
           </div>
           <div style={{ display: 'grid', gap: 8 }}>
-            {positions.map((p) => (
+            {positions.slice(0, 1).map((p) => (
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid rgba(0,180,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ fontWeight: 900 }}>{p.pair}</div>
@@ -74,12 +76,12 @@ export default function BottomBar({ positions, trades, alerts, onClose }) {
           </div>
         </section>
 
-        <section>
+        <section style={{ flex: 1, minWidth: 0 }}>
           <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 8 }}>
             Recent Trades
           </div>
           <div style={{ display: 'grid', gap: 8 }}>
-            {trades.map((t) => (
+            {trades.slice(0, 1).map((t) => (
               <div key={t.id || `${t.pair}-${t.openedAt || t.time}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid rgba(0,180,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                 <div>
                   <div style={{ fontWeight: 900 }}>{t.pair}</div>
@@ -96,12 +98,12 @@ export default function BottomBar({ positions, trades, alerts, onClose }) {
           </div>
         </section>
 
-        <section>
+        <section style={{ flex: 1, minWidth: 0 }}>
           <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 8 }}>
             Market Alerts
           </div>
           <div style={{ display: 'grid', gap: 8 }}>
-            {alerts.map((a) => (
+            {alerts.slice(0, 1).map((a) => (
               <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid rgba(0,180,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ color: a.level === 'WARN' ? 'var(--gold)' : a.level === 'RISK' ? 'var(--red)' : 'var(--cyan)' }}>

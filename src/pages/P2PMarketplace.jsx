@@ -11,6 +11,12 @@ function Badge({ text, col }) {
   )
 }
 
+function pulseStyle(active) {
+  return active
+    ? { animation: 'p2pPulse 1.4s ease-in-out infinite', boxShadow: '0 0 12px rgba(240,180,41,0.22)' }
+    : {}
+}
+
 export default function P2PMarketplace() {
   const nav = useNavigate()
   const ticker = useMemo(
@@ -56,11 +62,12 @@ export default function P2PMarketplace() {
           height: 22,
           borderRadius: 999,
           border: '1px solid rgba(0,180,255,0.12)',
-          background: done ? 'rgba(0,230,118,0.12)' : active ? 'rgba(240,180,41,0.12)' : 'rgba(255,255,255,0.02)',
+          background: done ? 'rgba(0,230,118,0.2)' : active ? 'rgba(240,180,41,0.18)' : 'rgba(30,36,45,0.65)',
           color: done ? 'var(--green)' : active ? 'var(--gold)' : 'var(--muted)',
           fontWeight: 900,
           display: 'grid',
           placeItems: 'center',
+          ...pulseStyle(active),
         }}
       >
         {done ? '✓' : active ? '⟳' : '○'}
@@ -165,10 +172,10 @@ export default function P2PMarketplace() {
                   width: '100%',
                   borderRadius: 16,
                   padding: '14px 14px',
-                  border: '1px solid rgba(240,180,41,0.55)',
-                  background: 'linear-gradient(180deg, rgba(240,180,41,0.25), rgba(240,180,41,0.08))',
-                  color: 'var(--text)',
-                  fontWeight: 900,
+                  border: '1px solid rgba(240,180,41,0.85)',
+                  background: 'linear-gradient(135deg, #f0b429, #c8880a)',
+                  color: '#000',
+                  fontWeight: 800,
                   letterSpacing: '0.16em',
                   cursor: 'none',
                   boxShadow: '0 0 28px rgba(240,180,41,0.16)',
@@ -194,6 +201,22 @@ export default function P2PMarketplace() {
                     <div className="mono" style={{ fontWeight: 900, fontSize: 18, marginTop: 6, color: s.c }}>{s.v}</div>
                   </div>
                 ))}
+              </div>
+              <div
+                className="mono"
+                style={{
+                  marginTop: 10,
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr 1fr',
+                  gap: 8,
+                  borderTop: '1px solid rgba(0,180,255,0.12)',
+                  paddingTop: 10,
+                  color: 'rgba(223,240,255,0.82)',
+                }}
+              >
+                <div>Total Trades: 1842</div>
+                <div>Avg Time: 4.2m</div>
+                <div>Disputes: 0.8%</div>
               </div>
             </div>
 

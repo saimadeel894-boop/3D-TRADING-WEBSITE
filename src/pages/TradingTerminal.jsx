@@ -73,23 +73,21 @@ export default function TradingTerminal() {
       <ThreeBackground />
       <TopNav ticker={topTicker} connectionStatus={connection} balance={sim.balance} />
 
-      <div className="pagePad" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="pagePad" style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <div className="mobilePairHeader glass mono">
           <span>{pairLabel(activePair)}</span>
           <span style={{ color: ticker?.change >= 0 ? 'var(--green)' : 'var(--red)' }}>
             ${markPrice ? markPrice.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
           </span>
         </div>
-        <div className="terminalGrid" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr 340px', gap: 12, minHeight: 0 }}>
+        <div className="terminalGrid" style={{ minHeight: 0 }}>
           <PairSidebar
             pairs={PAIRS}
             tickers={tickers}
             selected={activePair}
             onSelect={setActivePair}
           />
-          <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, position: 'relative', height: 'calc(100vh - 280px)' }}>
-            <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
             <CandlestickChart
               pair={pairLabel(activePair)}
               interval={activeInterval}
@@ -99,7 +97,6 @@ export default function TradingTerminal() {
               isLoading={candlesLoading}
               status={candlesStatus}
             />
-            </div>
           </div>
           <OrderPanel
             pair={pairLabel(activePair)}
@@ -113,11 +110,9 @@ export default function TradingTerminal() {
             placeOrder={sim.placeOrder}
             closePosition={sim.closePosition}
           />
-          </div>
         </div>
+        <BottomBar positions={sim.positions} trades={sim.tradeHistory} alerts={alerts} onClose={sim.closePosition} />
       </div>
-
-      <BottomBar positions={sim.positions} trades={sim.tradeHistory} alerts={alerts} onClose={sim.closePosition} />
     </div>
   )
 }
