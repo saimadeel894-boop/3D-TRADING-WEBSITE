@@ -37,7 +37,8 @@ body {
   color: var(--text);
   font-family: Syne, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   cursor: none;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -158,5 +159,79 @@ body {
 
 .argusGlow {
   box-shadow: 0 0 34px rgba(0, 212, 255, 0.22), 0 0 90px rgba(139, 92, 246, 0.14);
+}
+
+/* Layout helpers */
+.pagePad {
+  padding: 0 16px 16px;
+}
+
+.terminalGrid {
+  display: grid;
+  grid-template-columns: 320px 1fr 340px;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.adminKpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.split_2_1 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+}
+
+.split_16_10 {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 12px;
+}
+
+.split_14_10 {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 12px;
+}
+
+/* Responsive rules */
+@media (max-width: 1200px) {
+  .terminalGrid {
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto auto;
+  }
+  .terminalGrid > :nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  body {
+    overflow-y: auto;
+  }
+
+  .terminalGrid,
+  .adminKpis,
+  .split_2_1,
+  .split_16_10,
+  .split_14_10 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .pagePad {
+    padding: 0 12px 12px;
+  }
+  .cursorDot,
+  .cursorRing {
+    display: none;
+  }
+  body {
+    cursor: auto;
+  }
 }
 

@@ -98,11 +98,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, height: '100%' }}>
+    <div style={{ position: 'relative', zIndex: 1, minHeight: '100%' }}>
       <ThreeBackground />
       <TopNav ticker={ticker} />
 
-      <div style={{ position: 'relative', zIndex: 10, padding: '0 16px 16px' }}>
+      <div className="pagePad" style={{ position: 'relative', zIndex: 10 }}>
         <div className="glass" style={{ borderRadius: 18, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <div>
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 14 }}>
+          <div className="adminKpis" style={{ marginTop: 14 }}>
             {kpis.map((k) => (
               <div key={k.label} className="glass glass-hover" style={{ borderRadius: 18, padding: 14, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', inset: 0, borderTop: `3px solid ${k.top}` }} />
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 12, marginTop: 12 }}>
+          <div className="split_16_10" style={{ marginTop: 12 }}>
             <div className="glass" style={{ borderRadius: 18, padding: 14 }}>
               <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
                 User Sessions
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 12, marginTop: 12 }}>
+          <div className="split_14_10" style={{ marginTop: 12 }}>
             <div className="glass" style={{ borderRadius: 18, padding: 14 }}>
               <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
                 API Endpoints

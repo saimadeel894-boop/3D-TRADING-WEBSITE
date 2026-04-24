@@ -72,12 +72,12 @@ export default function P2PMarketplace() {
   )
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, height: '100%' }}>
+    <div style={{ position: 'relative', zIndex: 1, minHeight: '100%' }}>
       <ThreeBackground />
       <TopNav ticker={ticker} />
 
-      <div style={{ position: 'relative', zIndex: 10, padding: '0 16px 16px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
+      <div className="pagePad" style={{ position: 'relative', zIndex: 10 }}>
+        <div className="split_2_1">
           <div style={{ display: 'grid', gap: 12 }}>
             <div className="glass" style={{ borderRadius: 18, padding: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>

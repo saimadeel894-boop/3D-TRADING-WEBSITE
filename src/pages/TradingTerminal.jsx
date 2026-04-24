@@ -90,22 +90,16 @@ export default function TradingTerminal() {
   )
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, height: '100%' }}>
+    <div style={{ position: 'relative', zIndex: 1, minHeight: '100%' }}>
       <ThreeBackground />
       <TopNav ticker={ticker} />
 
-      <div style={{ position: 'relative', zIndex: 10, padding: '0 16px', height: 'calc(100% - 168px)' }}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '320px 1fr 340px',
-            gap: 12,
-            height: '100%',
-            alignItems: 'stretch',
-          }}
-        >
+      <div className="pagePad" style={{ position: 'relative', zIndex: 10 }}>
+        <div className="terminalGrid">
           <PairSidebar selected={selectedPair} onSelect={setSelectedPair} />
-          <CandlestickChart pair={selectedPair} basePrice={price} />
+          <div style={{ minHeight: 520 }}>
+            <CandlestickChart pair={selectedPair} basePrice={price} />
+          </div>
           <OrderPanel pair={selectedPair} price={price} />
         </div>
       </div>
