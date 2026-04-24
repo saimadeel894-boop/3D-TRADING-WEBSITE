@@ -5,7 +5,6 @@ import PairSidebar from '../components/PairSidebar.jsx'
 import CandlestickChart from '../components/CandlestickChart.jsx'
 import OrderPanel from '../components/OrderPanel.jsx'
 import BottomBar from '../components/BottomBar.jsx'
-import { Panel, SectionHeader } from '../components/ui/Primitives.jsx'
 import { useBinancePrice } from '../hooks/useBinancePrice.js'
 import { useBinanceCandles } from '../hooks/useBinanceCandles.js'
 import { useBinanceOrderBook } from '../hooks/useBinanceOrderBook.js'
@@ -75,12 +74,6 @@ export default function TradingTerminal() {
       <TopNav ticker={topTicker} connectionStatus={connection} balance={sim.balance} />
 
       <div className="pagePad" style={{ position: 'relative', zIndex: 10 }}>
-        <Panel style={{ marginBottom: 10 }}>
-          <SectionHeader
-            title="Terminal Core"
-            subtitle="Institutional-grade execution • sub-second live market telemetry"
-          />
-        </Panel>
         <div className="mobilePairHeader glass mono">
           <span>{pairLabel(activePair)}</span>
           <span style={{ color: ticker?.change >= 0 ? 'var(--green)' : 'var(--red)' }}>

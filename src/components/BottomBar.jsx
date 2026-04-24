@@ -10,7 +10,7 @@ function Pnl({ value }) {
 }
 
 export default function BottomBar({ positions, trades, alerts, onClose }) {
-  const icon = (k) => (k === 'risk' ? <AlertTriangle size={14} strokeWidth={1.5} /> : k === 'bell' ? <Bell size={14} strokeWidth={1.5} /> : <ShieldCheck size={14} strokeWidth={1.5} />)
+  const icon = (k) => (k === 'risk' ? <AlertTriangle size={14} /> : k === 'bell' ? <Bell size={14} /> : <ShieldCheck size={14} />)
 
   return (
     <div style={{ position: 'relative', zIndex: 10, padding: '10px 16px 14px' }}>

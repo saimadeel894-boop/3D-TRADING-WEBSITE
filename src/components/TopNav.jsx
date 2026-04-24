@@ -55,7 +55,7 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
           <HexLogo />
           <div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-              <div style={{ fontWeight: 900, letterSpacing: '2px', fontSize: 16, textShadow: '0 0 8px rgba(0,242,255,0.26)' }}>
+              <div style={{ fontWeight: 900, letterSpacing: '-0.03em', fontSize: 16 }}>
                 VERTEX<span style={{ color: 'var(--cyan)' }}>PRO</span>
               </div>
               <span className="pill mono" style={{ color: 'var(--gold)' }}>
@@ -76,13 +76,11 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
               className="mono"
               style={({ isActive }) => ({
                 textDecoration: 'none',
-                padding: '8px 11px',
+                padding: '9px 12px',
                 borderRadius: 999,
                 border: `1px solid ${isActive ? 'rgba(0,212,255,0.28)' : 'rgba(0,180,255,0.08)'}`,
                 background: isActive ? 'rgba(0,212,255,0.07)' : 'rgba(255,255,255,0.015)',
                 color: isActive ? 'var(--text)' : 'var(--muted)',
-                borderBottom: isActive ? '2px solid #00F2FF' : '1px solid rgba(0,180,255,0.08)',
-                filter: isActive ? 'drop-shadow(0 0 5px #00F2FF)' : 'none',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 fontSize: 11,
@@ -117,7 +115,7 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
                   <div style={{ fontWeight: 800, color: 'var(--text)' }}>{it.symbol}</div>
                   <div style={{ color: 'rgba(223,240,255,0.82)' }}>{fmt(it.price)}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: up ? 'var(--green)' : 'var(--red)' }}>
-                    {up ? <ArrowUpRight size={14} strokeWidth={1.5} /> : <ArrowDownLeft size={14} strokeWidth={1.5} />}
+                    {up ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}
                     {up ? '+' : ''}
                     {it.change.toFixed(2)}%
                   </div>
@@ -130,7 +128,7 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button type="button" className="btn mono" onClick={() => {}} style={{ cursor: 'none', borderRadius: 999 }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <Wallet size={16} strokeWidth={1.5} /> DEPOSIT
+              <Wallet size={16} /> DEPOSIT
             </span>
           </button>
           <button type="button" className="btn btnPrimary mono argusGlow" onClick={() => nav('/')} style={{ cursor: 'none', borderRadius: 999 }}>

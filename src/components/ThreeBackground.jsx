@@ -93,10 +93,7 @@ function Particles() {
     const t = state.clock.getElapsedTime()
     if (group.current) {
       group.current.rotation.y = t * 0.06
-      group.current.rotation.x = Math.sin(t * 0.2) * 0.06 + state.pointer.y * 0.06
-      group.current.rotation.z = state.pointer.x * 0.04
-      group.current.position.x = state.pointer.x * 0.2
-      group.current.position.y = state.pointer.y * 0.14
+      group.current.rotation.x = Math.sin(t * 0.2) * 0.06
     }
   })
 

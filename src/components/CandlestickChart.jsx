@@ -26,8 +26,8 @@ export default function CandlestickChart({
         textColor: '#94a3b8',
       },
       grid: {
-        vertLines: { color: 'rgba(255,255,255,0.03)' },
-        horzLines: { color: 'rgba(255,255,255,0.03)' },
+        vertLines: { color: 'rgba(0,242,255,0.05)' },
+        horzLines: { color: 'rgba(0,242,255,0.05)' },
       },
       crosshair: {
         mode: CrosshairMode.Normal,
