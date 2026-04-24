@@ -9,7 +9,7 @@ function Pnl({ value }) {
   )
 }
 
-export default function BottomBar({ positions, trades, alerts }) {
+export default function BottomBar({ positions, trades, alerts, onClose }) {
   const icon = (k) => (k === 'risk' ? <AlertTriangle size={14} /> : k === 'bell' ? <Bell size={14} /> : <ShieldCheck size={14} />)
 
   return (
@@ -30,18 +30,44 @@ export default function BottomBar({ positions, trades, alerts }) {
           </div>
           <div style={{ display: 'grid', gap: 8 }}>
             {positions.map((p) => (
-              <div key={p.pair} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid rgba(0,180,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid rgba(0,180,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ fontWeight: 900 }}>{p.pair}</div>
-                  <span className="mono" style={{ fontSize: 11, padding: '4px 8px', borderRadius: 999, border: '1px solid rgba(0,180,255,0.10)', background: p.dir === 'LONG' ? 'rgba(0,230,118,0.10)' : 'rgba(255,61,113,0.10)', color: p.dir === 'LONG' ? 'var(--green)' : 'var(--red)', fontWeight: 800 }}>
-                    {p.dir}
+                  <span
+                    className="mono"
+                    style={{
+                      fontSize: 11,
+                      padding: '4px 8px',
+                      borderRadius: 999,
+                      border: '1px solid rgba(0,180,255,0.10)',
+                      background: p.side === 'buy' ? 'rgba(0,230,118,0.10)' : 'rgba(255,61,113,0.10)',
+                      color: p.side === 'buy' ? 'var(--green)' : 'var(--red)',
+                      fontWeight: 800,
+                    }}
+                  >
+                    {p.side === 'buy' ? 'LONG' : 'SHORT'}
                   </span>
                 </div>
                 <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ color: 'rgba(223,240,255,0.75)' }}>
-                    {p.entry.toFixed(2)}→{p.current.toFixed(2)}
-                  </span>
-                  <Pnl value={p.pnl} />
+                  <span style={{ color: 'rgba(223,240,255,0.75)' }}>{p.entry.toFixed(2)}</span>
+                  <Pnl value={p.pnl || 0} />
+                  <button
+                    type="button"
+                    onClick={() => onClose?.(p.id)}
+                    className="mono"
+                    style={{
+                      borderRadius: 999,
+                      padding: '7px 10px',
+                      border: '1px solid rgba(0,212,255,0.22)',
+                      background: 'rgba(0,212,255,0.06)',
+                      color: 'var(--text)',
+                      fontWeight: 900,
+                      letterSpacing: '0.12em',
+                      cursor: 'none',
+                    }}
+                  >
+                    CLOSE
+                  </button>
                 </div>
               </div>
             ))}
@@ -54,7 +80,7 @@ export default function BottomBar({ positions, trades, alerts }) {
           </div>
           <div style={{ display: 'grid', gap: 8 }}>
             {trades.map((t) => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid rgba(0,180,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+              <div key={t.id || `${t.pair}-${t.openedAt || t.time}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid rgba(0,180,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                 <div>
                   <div style={{ fontWeight: 900 }}>{t.pair}</div>
                   <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
@@ -62,8 +88,8 @@ export default function BottomBar({ positions, trades, alerts }) {
                   </div>
                 </div>
                 <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ color: 'rgba(223,240,255,0.75)' }}>{t.size}</span>
-                  <Pnl value={t.pnl} />
+                  <span style={{ color: 'rgba(223,240,255,0.75)' }}>{t.size?.toFixed ? t.size.toFixed(4) : t.size}</span>
+                  <Pnl value={t.pnl || 0} />
                 </div>
               </div>
             ))}

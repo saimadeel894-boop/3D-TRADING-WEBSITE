@@ -1,5 +1,5 @@
+import { memo, useEffect, useMemo, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { useEffect, useMemo, useState } from 'react'
 import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react'
 
 function HexLogo() {
@@ -17,16 +17,16 @@ function HexLogo() {
   )
 }
 
-function fmt(n) {
-  const d = n >= 1000 ? 2 : 4
-  return n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
+function fmt(n, d) {
+  const dec = typeof d === 'number' ? d : n >= 1000 ? 2 : 4
+  return n.toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec })
 }
 
-export default function TopNav({ ticker }) {
+function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
   const nav = useNavigate()
-  const [items, setItems] = useState(ticker)
+  const [items, setItems] = useState(ticker || [])
 
-  useEffect(() => setItems(ticker), [ticker])
+  useEffect(() => setItems(ticker || []), [ticker])
 
   const tabs = useMemo(
     () => [
@@ -134,19 +134,37 @@ export default function TopNav({ ticker }) {
           <button type="button" className="btn btnPrimary mono argusGlow" onClick={() => nav('/')} style={{ cursor: 'none', borderRadius: 999 }}>
             TRADE NOW
           </button>
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 999,
-              border: '1px solid rgba(0,212,255,0.22)',
-              background: 'radial-gradient(circle at 30% 25%, rgba(0,212,255,0.35), rgba(139,92,246,0.10), rgba(255,255,255,0.02))',
-              boxShadow: '0 0 18px rgba(0,212,255,0.18)',
-            }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="pill mono" style={{ color: 'rgba(223,240,255,0.86)' }}>
+              BAL ${fmt(balance, 0)}
+            </div>
+            <div
+              title={`Connection: ${connectionStatus}`}
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 999,
+                border: '1px solid rgba(255,255,255,0.18)',
+                background:
+                  connectionStatus === 'connected'
+                    ? 'rgba(0,230,118,0.95)'
+                    : connectionStatus === 'disconnected'
+                      ? 'rgba(255,61,113,0.95)'
+                      : 'rgba(240,180,41,0.95)',
+                boxShadow:
+                  connectionStatus === 'connected'
+                    ? '0 0 16px rgba(0,230,118,0.25)'
+                    : connectionStatus === 'disconnected'
+                      ? '0 0 16px rgba(255,61,113,0.25)'
+                      : '0 0 16px rgba(240,180,41,0.25)',
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
   )
 }
+
+export default memo(TopNav)
 

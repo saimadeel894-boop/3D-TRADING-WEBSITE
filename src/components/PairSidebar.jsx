@@ -1,95 +1,64 @@
-import { useEffect, useMemo, useState } from 'react'
-
-const PAIRS = [
-  { symbol: 'EUR/USD', type: 'FOREX', base: 1.0842 },
-  { symbol: 'GBP/USD', type: 'FOREX', base: 1.2764 },
-  { symbol: 'USD/JPY', type: 'FOREX', base: 153.42 },
-  { symbol: 'AUD/USD', type: 'FOREX', base: 0.6621 },
-  { symbol: 'USD/CAD', type: 'FOREX', base: 1.3618 },
-  { symbol: 'EUR/GBP', type: 'FOREX', base: 0.8492 },
-  { symbol: 'USD/CHF', type: 'FOREX', base: 0.9034 },
-  { symbol: 'NZD/USD', type: 'FOREX', base: 0.6112 },
-  { symbol: 'EUR/JPY', type: 'FOREX', base: 166.32 },
-  { symbol: 'GBP/JPY', type: 'FOREX', base: 195.74 },
-  { symbol: 'OTC EUR', type: 'OTC', base: 1.0831 },
-  { symbol: 'OTC GBP', type: 'OTC', base: 1.2741 },
-  { symbol: 'BTC/USD', type: 'CRYPTO', base: 67842.3 },
-  { symbol: 'ETH/USD', type: 'CRYPTO', base: 3524.8 },
-  { symbol: 'AUD/JPY', type: 'FOREX', base: 101.42 },
-  { symbol: 'EUR/AUD', type: 'FOREX', base: 1.6418 },
-]
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 
 function fmt(n, sym) {
-  const d = sym.includes('JPY') ? 2 : sym.includes('BTC') ? 2 : sym.includes('ETH') ? 2 : 4
+  const d = sym.includes('BTC') || sym.includes('ETH') || sym.includes('SOL') || sym.includes('BNB') || sym.includes('XRP') ? 2 : 4
   return n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
-function drift(symbol) {
-  if (symbol.includes('BTC')) return 0.0032
-  if (symbol.includes('ETH')) return 0.004
-  if (symbol.includes('JPY')) return 0.0015
-  return 0.0012
+function label(p) {
+  return p.replace('usdt', '/USDT').toUpperCase()
 }
 
-export default function PairSidebar({ selected, onSelect }) {
+function PairSidebar({ pairs, tickers, selected, onSelect }) {
   const [q, setQ] = useState('')
-  const [filter, setFilter] = useState('ALL')
-  const [rows, setRows] = useState(() =>
-    PAIRS.map((p) => ({ ...p, price: p.base, change: (Math.random() - 0.5) * 0.6 })),
-  )
+  const [flashMap, setFlashMap] = useState({})
+  const prevPriceRef = useRef({})
+  const flashTimersRef = useRef({})
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setRows((prev) =>
-        prev.map((r) => {
-          const pct = drift(r.symbol)
-          const noise = (Math.random() - 0.5) * 2
-          const delta = noise * pct
-          const next = r.price * (1 + delta)
-          const ch = Math.max(-9.9, Math.min(9.9, r.change + delta * 100 * 0.25))
-          return { ...r, price: next, change: ch }
-        }),
-      )
-    }, 1200)
-    return () => clearInterval(id)
-  }, [])
+    const nextFlashes = {}
+    for (const p of pairs || []) {
+      const key = p.toUpperCase()
+      const next = tickers?.[key]?.price
+      const prev = prevPriceRef.current[key]
+      if (Number.isFinite(prev) && Number.isFinite(next) && prev !== next) {
+        nextFlashes[p] = next > prev ? 'flash-green' : 'flash-red'
+        if (flashTimersRef.current[p]) window.clearTimeout(flashTimersRef.current[p])
+        flashTimersRef.current[p] = window.setTimeout(() => {
+          setFlashMap((m) => {
+            if (!m[p]) return m
+            const n = { ...m }
+            delete n[p]
+            return n
+          })
+          delete flashTimersRef.current[p]
+        }, 300)
+      }
+      if (Number.isFinite(next)) prevPriceRef.current[key] = next
+    }
+    if (Object.keys(nextFlashes).length) {
+      setFlashMap((m) => ({ ...m, ...nextFlashes }))
+    }
+  }, [pairs, tickers])
+
+  useEffect(
+    () => () => {
+      for (const t of Object.values(flashTimersRef.current)) window.clearTimeout(t)
+    },
+    [],
+  )
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase()
-    return rows.filter((r) => {
-      const okType = filter === 'ALL' ? true : r.type === filter
-      const okQ = !qq ? true : r.symbol.toLowerCase().includes(qq)
-      return okType && okQ
-    })
-  }, [filter, q, rows])
-
-  const btn = (id, label) => (
-    <button
-      type="button"
-      onClick={() => setFilter(id)}
-      className="mono"
-      style={{
-        borderRadius: 999,
-        padding: '6px 10px',
-        border: '1px solid var(--border)',
-        background: filter === id ? 'rgba(0,212,255,0.10)' : 'rgba(255,255,255,0.02)',
-        color: filter === id ? 'var(--text)' : 'var(--muted)',
-        fontSize: 11,
-        letterSpacing: '0.18em',
-        textTransform: 'uppercase',
-        cursor: 'none',
-      }}
-    >
-      {label}
-    </button>
-  )
+    return (pairs || []).filter((p) => (!qq ? true : label(p).toLowerCase().includes(qq)))
+  }, [pairs, q])
 
   return (
-    <div className="glass" style={{ borderRadius: 18, padding: 12, height: '100%', overflow: 'hidden' }}>
+    <div className="glass pairSidebar" style={{ borderRadius: 18, padding: 12, height: '100%', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>Pairs</div>
         <div className="pill mono" style={{ color: 'var(--cyan)' }}>
-          16 LIVE
+          LIVE
         </div>
       </div>
 
@@ -110,23 +79,20 @@ export default function PairSidebar({ selected, onSelect }) {
           cursor: 'none',
         }}
       />
-
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        {btn('ALL', 'ALL')}
-        {btn('FOREX', 'FOREX')}
-        {btn('OTC', 'OTC')}
-        {btn('CRYPTO', 'CRYPTO')}
-      </div>
-
-      <div style={{ height: 'calc(100% - 118px)', overflow: 'auto', paddingRight: 4 }}>
-        {filtered.map((r) => {
-          const isSel = r.symbol === selected
-          const up = r.change >= 0
+      <div style={{ height: 'calc(100% - 76px)', overflow: 'auto', paddingRight: 4 }}>
+        {filtered.map((p) => {
+          const key = p.toUpperCase()
+          const t = tickers?.[key]
+          const sym = label(p)
+          const price = t?.price ?? 0
+          const change = Number.parseFloat(t?.change ?? '0')
+          const isSel = p === selected
+          const up = change >= 0
           return (
             <button
-              key={r.symbol}
+              key={p}
               type="button"
-              onClick={() => onSelect(r.symbol)}
+              onClick={() => onSelect(p)}
               style={{
                 width: '100%',
                 textAlign: 'left',
@@ -156,14 +122,14 @@ export default function PairSidebar({ selected, onSelect }) {
               ) : null}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                 <div>
-                  <div style={{ fontWeight: 800, letterSpacing: '-0.01em' }}>{r.symbol}</div>
+                  <div style={{ fontWeight: 800, letterSpacing: '-0.01em' }}>{sym}</div>
                   <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
-                    {r.type}
+                    SPOT • BINANCE
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div className="mono" style={{ fontWeight: 700 }}>
-                    {fmt(r.price, r.symbol)}
+                  <div className={`mono ${flashMap[p] || ''}`} style={{ fontWeight: 700 }}>
+                    {price ? fmt(price, sym) : '—'}
                   </div>
                   <div
                     className="mono"
@@ -174,7 +140,7 @@ export default function PairSidebar({ selected, onSelect }) {
                     }}
                   >
                     {up ? '+' : ''}
-                    {r.change.toFixed(2)}%
+                    {change.toFixed(2)}%
                   </div>
                 </div>
               </div>
@@ -185,4 +151,6 @@ export default function PairSidebar({ selected, onSelect }) {
     </div>
   )
 }
+
+export default memo(PairSidebar)
 

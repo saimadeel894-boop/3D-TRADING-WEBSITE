@@ -1,84 +1,63 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import ThreeBackground from '../components/ThreeBackground.jsx'
 import TopNav from '../components/TopNav.jsx'
 import PairSidebar from '../components/PairSidebar.jsx'
 import CandlestickChart from '../components/CandlestickChart.jsx'
 import OrderPanel from '../components/OrderPanel.jsx'
 import BottomBar from '../components/BottomBar.jsx'
+import { useBinancePrice } from '../hooks/useBinancePrice.js'
+import { useBinanceCandles } from '../hooks/useBinanceCandles.js'
+import { useBinanceOrderBook } from '../hooks/useBinanceOrderBook.js'
+import { useMultiTicker } from '../hooks/useMultiTicker.js'
+import { useSimulatedOrders } from '../hooks/useSimulatedOrders.js'
 
-function baseFor(pair) {
-  if (pair.includes('BTC')) return 67842.3
-  if (pair.includes('ETH')) return 3524.8
-  if (pair.includes('JPY')) return 153.42
-  if (pair.includes('OTC')) return 1.10
-  return 1.0
-}
+const PAIRS = ['btcusdt', 'ethusdt', 'solusdt', 'bnbusdt', 'xrpusdt']
+const INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1D']
 
-function drift(pair) {
-  if (pair.includes('BTC')) return 0.0032
-  if (pair.includes('ETH')) return 0.004
-  if (pair.includes('JPY')) return 0.0015
-  return 0.0012
+function pairLabel(p) {
+  return p.replace('usdt', '/USDT').toUpperCase()
 }
 
 export default function TradingTerminal() {
-  const [selectedPair, setSelectedPair] = useState('BTC/USD')
-  const [priceMap, setPriceMap] = useState(() => new Map([['BTC/USD', 67842.3], ['ETH/USD', 3524.8]]))
+  const [activePair, setActivePair] = useState('btcusdt')
+  const [activeInterval, setActiveInterval] = useState('1m')
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      setPriceMap((prev) => {
-        const next = new Map(prev)
-        // keep these 4 for top ticker
-        const keys = ['BTC/USD', 'ETH/USD', 'EUR/USD', 'USD/JPY']
-        for (const k of keys) {
-          const cur = next.get(k) ?? baseFor(k)
-          const pct = drift(k)
-          const noise = (Math.random() - 0.5) * 2
-          next.set(k, cur * (1 + noise * pct))
-        }
-        // selected pair always updates
-        const curSel = next.get(selectedPair) ?? baseFor(selectedPair)
-        next.set(selectedPair, curSel * (1 + (Math.random() - 0.5) * 2 * drift(selectedPair)))
-        return next
-      })
-    }, 1200)
-    return () => clearInterval(id)
-  }, [selectedPair])
+  const { tickers, status: multiStatus } = useMultiTicker()
+  const { data: ticker, status: tickerStatus } = useBinancePrice(activePair)
+  const { book, status: bookStatus } = useBinanceOrderBook(activePair)
+  const binanceInterval = activeInterval === '1D' ? '1d' : activeInterval
+  const { candles, status: candlesStatus, isLoading: candlesLoading } = useBinanceCandles(activePair, binanceInterval)
 
-  const price = priceMap.get(selectedPair) ?? baseFor(selectedPair)
+  const markPrice = ticker?.price ?? 0
+  const sim = useSimulatedOrders(markPrice || 0, { pairLabel: pairLabel(activePair) })
 
-  const ticker = useMemo(() => {
-    const items = [
-      { symbol: 'BTC/USD', price: priceMap.get('BTC/USD') ?? 67842.3 },
-      { symbol: 'ETH/USD', price: priceMap.get('ETH/USD') ?? 3524.8 },
-      { symbol: 'EUR/USD', price: priceMap.get('EUR/USD') ?? 1.0842 },
-      { symbol: 'USD/JPY', price: priceMap.get('USD/JPY') ?? 153.42 },
-    ]
-    return items.map((it) => ({
-      ...it,
-      change: (Math.random() - 0.5) * 1.4,
-    }))
-  }, [priceMap])
+  const topTicker = useMemo(() => {
+    // map to existing TopNav shape: [{symbol, price, change(number)}]
+    const out = PAIRS.slice(0, 4).map((p) => {
+      const key = p.toUpperCase()
+      const t = tickers[key]
+      return {
+        symbol: pairLabel(p),
+        price: t?.price ?? 0,
+        change: Number.parseFloat(t?.change ?? '0'),
+      }
+    })
+    return out
+  }, [tickers])
 
-  const positions = useMemo(() => {
-    const btc = (priceMap.get('BTC/USD') ?? 67842.3)
-    const eth = (priceMap.get('ETH/USD') ?? 3524.8)
-    return [
-      { pair: 'BTC/USD', dir: 'LONG', entry: 66420, current: btc, pnl: (btc - 66420) * 0.04 },
-      { pair: 'ETH/USD', dir: 'SHORT', entry: 3610, current: eth, pnl: (3610 - eth) * 0.55 },
-      { pair: 'EUR/USD', dir: 'LONG', entry: 1.0731, current: priceMap.get('EUR/USD') ?? 1.0842, pnl: 182.4 },
-    ]
-  }, [priceMap])
-
-  const trades = useMemo(
-    () => [
-      { id: 1, pair: 'BTC/USD', size: '0.120', pnl: 84.12, time: '2s ago' },
-      { id: 2, pair: 'USD/JPY', size: '2.50', pnl: -32.8, time: '14s ago' },
-      { id: 3, pair: 'ETH/USD', size: '1.20', pnl: 26.4, time: '41s ago' },
-    ],
-    [],
-  )
+  const connection = useMemo(() => {
+    const connected =
+      multiStatus === 'connected' &&
+      tickerStatus === 'connected' &&
+      bookStatus === 'connected' &&
+      candlesStatus === 'connected'
+    const anyDisconnected =
+      multiStatus === 'disconnected' ||
+      tickerStatus === 'disconnected' ||
+      bookStatus === 'disconnected' ||
+      candlesStatus === 'disconnected'
+    return connected ? 'connected' : anyDisconnected ? 'disconnected' : 'connecting'
+  }, [bookStatus, candlesStatus, multiStatus, tickerStatus])
 
   const alerts = useMemo(
     () => [
@@ -92,19 +71,49 @@ export default function TradingTerminal() {
   return (
     <div style={{ position: 'relative', zIndex: 1, minHeight: '100%' }}>
       <ThreeBackground />
-      <TopNav ticker={ticker} />
+      <TopNav ticker={topTicker} connectionStatus={connection} balance={sim.balance} />
 
       <div className="pagePad" style={{ position: 'relative', zIndex: 10 }}>
+        <div className="mobilePairHeader glass mono">
+          <span>{pairLabel(activePair)}</span>
+          <span style={{ color: ticker?.change >= 0 ? 'var(--green)' : 'var(--red)' }}>
+            ${markPrice ? markPrice.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
+          </span>
+        </div>
         <div className="terminalGrid">
-          <PairSidebar selected={selectedPair} onSelect={setSelectedPair} />
+          <PairSidebar
+            pairs={PAIRS}
+            tickers={tickers}
+            selected={activePair}
+            onSelect={setActivePair}
+          />
           <div style={{ minHeight: 520 }}>
-            <CandlestickChart pair={selectedPair} basePrice={price} />
+            <CandlestickChart
+              pair={pairLabel(activePair)}
+              interval={activeInterval}
+              onInterval={(it) => setActiveInterval(it)}
+              intervals={INTERVALS}
+              candles={candles}
+              isLoading={candlesLoading}
+              status={candlesStatus}
+            />
           </div>
-          <OrderPanel pair={selectedPair} price={price} />
+          <OrderPanel
+            pair={pairLabel(activePair)}
+            symbol={activePair}
+            price={markPrice}
+            ticker={ticker}
+            book={book}
+            bookStatus={bookStatus}
+            balance={sim.balance}
+            positions={sim.positions}
+            placeOrder={sim.placeOrder}
+            closePosition={sim.closePosition}
+          />
         </div>
       </div>
 
-      <BottomBar positions={positions} trades={trades} alerts={alerts} />
+      <BottomBar positions={sim.positions} trades={sim.tradeHistory} alerts={alerts} onClose={sim.closePosition} />
     </div>
   )
 }

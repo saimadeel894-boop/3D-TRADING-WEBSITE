@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ThreeBackground from '../components/ThreeBackground.jsx'
 import TopNav from '../components/TopNav.jsx'
+import { usePlatformStats } from '../hooks/usePlatformStats.js'
+import { useMultiTicker } from '../hooks/useMultiTicker.js'
 
 function Bar({ v, col }) {
   return (
@@ -21,25 +23,29 @@ function Badge({ children, col }) {
 
 export default function AdminDashboard() {
   const nav = useNavigate()
-  const ticker = useMemo(
-    () => [
-      { symbol: 'BTC/USD', price: 67842.3, change: 2.24 },
-      { symbol: 'ETH/USD', price: 3524.8, change: 1.12 },
-      { symbol: 'EUR/USD', price: 1.0842, change: -0.22 },
-      { symbol: 'USD/JPY', price: 153.42, change: 0.18 },
-    ],
-    [],
-  )
+  const stats = usePlatformStats()
+  const { tickers } = useMultiTicker()
 
-  const kpis = useMemo(
-    () => [
-      { label: 'Volume', value: '$8.42M', top: 'var(--cyan)' },
-      { label: 'Users', value: '1284', top: 'var(--green)' },
-      { label: 'Revenue', value: '$24,180', top: 'var(--gold)' },
-      { label: 'Escrow', value: '$142K', top: 'var(--purple)' },
-    ],
-    [],
-  )
+  const ticker = useMemo(() => {
+    const pairs = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT']
+    return pairs.map((s) => ({
+      symbol: s.replace('USDT', '/USDT'),
+      price: tickers?.[s]?.price ?? 0,
+      change: Number.parseFloat(tickers?.[s]?.change ?? '0'),
+    }))
+  }, [tickers])
+
+  const kpis = useMemo(() => {
+    const vol = stats.totalVolume || 0
+    const volText =
+      vol >= 1e9 ? `$${(vol / 1e9).toFixed(2)}B` : vol >= 1e6 ? `$${(vol / 1e6).toFixed(2)}M` : `$${vol.toFixed(0)}`
+    return [
+      { label: 'Total Volume (BTC 24h)', value: volText, top: 'var(--cyan)' },
+      { label: 'Active Users', value: String(stats.activeUsers), top: 'var(--green)' },
+      { label: 'Revenue', value: `$${(stats.revenue / 1000).toFixed(0)}K`, top: 'var(--gold)' },
+      { label: 'Open Positions', value: String(stats.openPositions), top: 'var(--purple)' },
+    ]
+  }, [stats])
 
   const sessions = useMemo(
     () => [

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 
 function fmt(n, d = 2) {
   return n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
@@ -8,50 +8,34 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n))
 }
 
-function genBook(mid) {
-  const step = mid > 1000 ? 2.5 : 0.0003
-  const asks = []
-  const bids = []
-  let ta = 0
-  let tb = 0
-  for (let i = 5; i >= 1; i -= 1) {
-    const px = mid + step * i
-    const size = (0.2 + Math.random() * 1.6) * (6 / i)
-    ta += size
-    asks.push({ px, size, total: ta })
-  }
-  for (let i = 1; i <= 5; i += 1) {
-    const px = mid - step * i
-    const size = (0.2 + Math.random() * 1.6) * (6 / i)
-    tb += size
-    bids.push({ px, size, total: tb })
-  }
-  return { asks, bids, step }
+function withTotals(levels) {
+  let total = 0
+  return (levels || []).map((r) => {
+    total += r.size || 0
+    return { ...r, total }
+  })
 }
 
-export default function OrderPanel({ pair, price }) {
+function OrderPanel({
+  pair,
+  symbol,
+  price,
+  ticker,
+  book,
+  bookStatus = 'connecting',
+  balance = 0,
+  placeOrder,
+}) {
   const [tab, setTab] = useState('BUY')
   const [amount, setAmount] = useState(0.42)
   const [sl, setSl] = useState('')
   const [tp, setTp] = useState('')
   const [lev, setLev] = useState(12)
-  const balance = 12450
-
-  const [book, setBook] = useState(() => genBook(price))
-
-  useEffect(() => {
-    const id = setInterval(() => setBook(genBook(price)), 1200)
-    return () => clearInterval(id)
-  }, [price])
 
   const entry = useMemo(() => price, [price])
   const posSize = useMemo(() => amount * entry, [amount, entry])
   const margin = useMemo(() => posSize / lev, [lev, posSize])
-  const est = useMemo(() => {
-    const move = (Math.random() - 0.5) * 0.012
-    const dir = tab === 'SELL' ? -1 : 1
-    return posSize * move * dir
-  }, [posSize, tab])
+  const est = useMemo(() => 0, [])
 
   const pctBtn = (p) => (
     <button
@@ -98,6 +82,25 @@ export default function OrderPanel({ pair, price }) {
   }
 
   const execCol = tab === 'SELL' ? 'var(--red)' : tab === 'LIMIT' ? 'var(--gold)' : 'var(--green)'
+  const asks = useMemo(() => withTotals(book?.asks), [book])
+  const bids = useMemo(() => withTotals(book?.bids), [book])
+  const askMax = asks.length ? asks[asks.length - 1].total || 1 : 1
+  const bidMax = bids.length ? bids[bids.length - 1].total || 1 : 1
+
+  const onExecute = () => {
+    const side = tab === 'SELL' ? 'sell' : 'buy'
+    placeOrder?.({
+      side,
+      type: tab === 'LIMIT' ? 'limit' : 'market',
+      price: entry,
+      amount,
+      leverage: lev,
+      pair,
+      symbol,
+      sl,
+      tp,
+    })
+  }
 
   return (
     <div className="glass" style={{ borderRadius: 18, padding: 12, height: '100%', overflow: 'hidden' }}>
@@ -109,6 +112,15 @@ export default function OrderPanel({ pair, price }) {
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>{tabBtn('BUY')}{tabBtn('SELL')}{tabBtn('LIMIT')}</div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+        <div className="pill mono" style={{ color: 'rgba(223,240,255,0.86)' }}>
+          {pair} • ${price ? fmt(price) : '—'}
+        </div>
+        <div className="pill mono" style={{ color: bookStatus === 'connected' ? 'var(--green)' : bookStatus === 'disconnected' ? 'var(--red)' : 'var(--gold)' }}>
+          BOOK {bookStatus.toUpperCase()}
+        </div>
+      </div>
 
       <div style={{ display: 'grid', gap: 10 }}>
         <label>
@@ -227,7 +239,8 @@ export default function OrderPanel({ pair, price }) {
 
         <button
           type="button"
-          className="mono"
+          onClick={onExecute}
+          className={`mono ${tab === 'SELL' ? 'btnTradeSell' : 'btnTradeBuy'}`}
           style={{
             borderRadius: 16,
             padding: '14px 14px',
@@ -256,13 +269,13 @@ export default function OrderPanel({ pair, price }) {
         </div>
 
         <div style={{ display: 'grid', gap: 6 }}>
-          {book.asks.map((r, i) => {
-            const pct = r.total / book.asks[book.asks.length - 1].total
+          {asks.map((r, i) => {
+            const pct = (r.total || 0) / askMax
             return (
               <div key={`a-${i}`} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', padding: '7px 8px', border: '1px solid rgba(255,255,255,0.02)', background: 'rgba(255,255,255,0.01)' }}>
                 <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 100)}%`, background: 'rgba(255,61,113,0.10)', right: 0, marginLeft: 'auto' }} />
                 <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, alignItems: 'center' }}>
-                  <div style={{ color: 'var(--red)', fontWeight: 700 }}>${fmt(r.px)}</div>
+                  <div style={{ color: 'var(--red)', fontWeight: 700 }}>${fmt(r.price)}</div>
                   <div style={{ textAlign: 'right' }}>{fmt(r.size, 3)}</div>
                   <div style={{ textAlign: 'right' }}>{fmt(r.total, 3)}</div>
                 </div>
@@ -271,16 +284,16 @@ export default function OrderPanel({ pair, price }) {
           })}
 
           <div className="mono" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, color: 'var(--gold)', fontWeight: 800, letterSpacing: '0.14em', padding: '6px 0' }}>
-            SPREAD {fmt(book.asks[0].px - book.bids[0].px, 2)}
+            SPREAD {asks[0] && bids[0] ? fmt(asks[0].price - bids[0].price, 2) : '—'}
           </div>
 
-          {book.bids.map((r, i) => {
-            const pct = r.total / book.bids[book.bids.length - 1].total
+          {bids.map((r, i) => {
+            const pct = (r.total || 0) / bidMax
             return (
               <div key={`b-${i}`} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', padding: '7px 8px', border: '1px solid rgba(255,255,255,0.02)', background: 'rgba(255,255,255,0.01)' }}>
                 <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 100)}%`, background: 'rgba(0,230,118,0.10)', right: 0, marginLeft: 'auto' }} />
                 <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, alignItems: 'center' }}>
-                  <div style={{ color: 'var(--green)', fontWeight: 700 }}>${fmt(r.px)}</div>
+                  <div style={{ color: 'var(--green)', fontWeight: 700 }}>${fmt(r.price)}</div>
                   <div style={{ textAlign: 'right' }}>{fmt(r.size, 3)}</div>
                   <div style={{ textAlign: 'right' }}>{fmt(r.total, 3)}</div>
                 </div>
@@ -292,4 +305,6 @@ export default function OrderPanel({ pair, price }) {
     </div>
   )
 }
+
+export default memo(OrderPanel)
 
