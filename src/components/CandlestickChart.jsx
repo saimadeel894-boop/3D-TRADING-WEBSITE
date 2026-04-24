@@ -73,6 +73,7 @@ export default function CandlestickChart({
 }) {
   const canvasRef = useRef(null)
   const dataRef = useRef(genSeedCandles(80))
+  const hoverRef = useRef({ active: false, x: 0, y: 0 })
 
   const mergedCandles = useMemo(() => {
     if (Array.isArray(candles) && candles.length >= 20) return candles.slice(-120)
@@ -191,6 +192,34 @@ export default function CandlestickChart({
       ctx.strokeStyle = 'rgba(240,180,41,0.78)'
       ctx.lineWidth = 1.3
       ctx.stroke()
+
+      if (hoverRef.current.active) {
+        const hx = clamp(hoverRef.current.x, xPad, w - rightPad)
+        const hy = clamp(hoverRef.current.y, 18, rsiTop + rsiH)
+        ctx.strokeStyle = 'rgba(0,212,255,0.65)'
+        ctx.shadowColor = 'rgba(0,212,255,0.55)'
+        ctx.shadowBlur = 8
+        ctx.beginPath()
+        ctx.moveTo(xPad, hy)
+        ctx.lineTo(w - rightPad, hy)
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(hx, 18)
+        ctx.lineTo(hx, rsiTop + rsiH)
+        ctx.stroke()
+        ctx.shadowBlur = 0
+
+        const pAt = maxP + pRange * 0.08 - ((hy - 18) / (priceH - 26)) * (pRange * 1.16)
+        ctx.fillStyle = 'rgba(0,212,255,0.14)'
+        ctx.strokeStyle = 'rgba(0,212,255,0.28)'
+        ctx.beginPath()
+        ctx.roundRect(w - rightPad + 8, hy - 10, 66, 20, 8)
+        ctx.fill()
+        ctx.stroke()
+        ctx.fillStyle = 'rgba(223,240,255,0.95)'
+        ctx.font = "600 10px 'JetBrains Mono'"
+        ctx.fillText(fmt(pAt), w - rightPad + 14, hy + 3)
+      }
     }
 
     const resize = () => {
@@ -202,10 +231,23 @@ export default function CandlestickChart({
     resize()
     const ro = new ResizeObserver(resize)
     ro.observe(parent)
+    const onMove = (e) => {
+      const rect = canvas.getBoundingClientRect()
+      hoverRef.current = { active: true, x: e.clientX - rect.left, y: e.clientY - rect.top }
+      render()
+    }
+    const onLeave = () => {
+      hoverRef.current.active = false
+      render()
+    }
+    canvas.addEventListener('mousemove', onMove)
+    canvas.addEventListener('mouseleave', onLeave)
     frame = requestAnimationFrame(render)
 
     return () => {
       ro.disconnect()
+      canvas.removeEventListener('mousemove', onMove)
+      canvas.removeEventListener('mouseleave', onLeave)
       cancelAnimationFrame(frame)
     }
   }, [mergedCandles])

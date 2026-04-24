@@ -12,6 +12,25 @@ function Bar({ v, col }) {
   )
 }
 
+function SegmentedBar({ value, color }) {
+  const lit = Math.round((Math.max(0, Math.min(100, value)) / 100) * 20)
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(20, 1fr)', gap: 3 }}>
+      {Array.from({ length: 20 }).map((_, i) => (
+        <div
+          key={i}
+          style={{
+            height: 7,
+            borderRadius: 2,
+            background: i < lit ? color : 'rgba(255,255,255,0.08)',
+            boxShadow: i < lit ? `0 0 8px ${color}` : 'none',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 function Badge({ children, col }) {
   return (
     <span className="mono" style={{ fontSize: 11, padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(0,180,255,0.10)', background: 'rgba(255,255,255,0.02)', color: col, fontWeight: 900, letterSpacing: '0.14em' }}>
@@ -109,7 +128,7 @@ export default function AdminDashboard() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <div>
               <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em' }}>ADMIN COMMAND CENTER</div>
-              <div className="mono" style={{ marginTop: 6, color: 'var(--muted)' }}>
+              <div className="mono" style={{ marginTop: 6, color: '#94A3B8', fontSize: 9 }}>
                 Threat-aware monitoring • Risk controls • Endpoint surface
               </div>
             </div>
@@ -145,13 +164,16 @@ export default function AdminDashboard() {
               </div>
               <div style={{ display: 'grid', gap: 8 }}>
                 {sessions.map((s) => (
-                  <div key={s.user} style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 0.8fr 0.8fr 0.8fr', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid rgba(0,180,255,0.06)', background: 'rgba(255,255,255,0.02)', alignItems: 'center' }}>
+                  <div key={s.user} style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 0.8fr 0.8fr 0.8fr', gap: 10, padding: '18px 10px', borderRadius: 14, border: '1px solid rgba(0,180,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ width: 28, height: 28, borderRadius: 999, border: '1px solid rgba(0,212,255,0.18)', background: 'radial-gradient(circle at 30% 25%, rgba(0,212,255,0.25), rgba(139,92,246,0.08), rgba(255,255,255,0.02))' }} />
                       <div style={{ fontWeight: 900 }}>{s.user}</div>
                     </div>
                     <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 999, background: s.status === 'LIVE' ? 'var(--green)' : s.status === 'WARN' ? 'var(--gold)' : 'rgba(74,122,155,0.8)' }} />
+                      <span
+                        className="healthDot"
+                        style={{ '--dotColor': s.status === 'LIVE' ? 'var(--green)' : s.status === 'WARN' ? 'var(--gold)' : 'rgba(74,122,155,0.8)' }}
+                      />
                       {s.status}
                     </div>
                     <div className="mono">{s.pair}</div>
@@ -174,25 +196,25 @@ export default function AdminDashboard() {
                     <div className="mono" style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(223,240,255,0.8)' }}>
                       <span>CPU</span><span>34%</span>
                     </div>
-                    <Bar v={34} col="linear-gradient(90deg, rgba(0,212,255,0.85), rgba(0,212,255,0))" />
+                    <SegmentedBar value={34} color="rgba(0,212,255,0.95)" />
                   </div>
                   <div>
                     <div className="mono" style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(223,240,255,0.8)' }}>
                       <span>RAM</span><span>62%</span>
                     </div>
-                    <Bar v={62} col="linear-gradient(90deg, rgba(139,92,246,0.85), rgba(139,92,246,0))" />
+                    <SegmentedBar value={62} color="rgba(139,92,246,0.95)" />
                   </div>
                   <div>
                     <div className="mono" style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(223,240,255,0.8)' }}>
                       <span>Disk</span><span>41%</span>
                     </div>
-                    <Bar v={41} col="linear-gradient(90deg, rgba(240,180,41,0.85), rgba(240,180,41,0))" />
+                    <SegmentedBar value={41} color="rgba(240,180,41,0.95)" />
                   </div>
                   <div>
                     <div className="mono" style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(223,240,255,0.8)' }}>
                       <span>Net</span><span>18%</span>
                     </div>
-                    <Bar v={18} col="linear-gradient(90deg, rgba(0,230,118,0.85), rgba(0,230,118,0))" />
+                    <SegmentedBar value={18} color="rgba(0,230,118,0.95)" />
                   </div>
                 </div>
               </div>

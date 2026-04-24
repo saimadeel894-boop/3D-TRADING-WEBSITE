@@ -93,7 +93,10 @@ function Particles() {
     const t = state.clock.getElapsedTime()
     if (group.current) {
       group.current.rotation.y = t * 0.06
-      group.current.rotation.x = Math.sin(t * 0.2) * 0.06
+      group.current.rotation.x = Math.sin(t * 0.2) * 0.06 + state.pointer.y * 0.05
+      group.current.rotation.z = state.pointer.x * 0.03
+      group.current.position.x = state.pointer.x * 0.16
+      group.current.position.y = state.pointer.y * 0.1
     }
   })
 
@@ -122,7 +125,7 @@ export default function ThreeBackground() {
         width: '100%',
         height: '100%',
         zIndex: 0,
-        opacity: 0.6,
+        opacity: 0.1,
         pointerEvents: 'none',
       }}
     >

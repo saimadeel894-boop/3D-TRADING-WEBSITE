@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import ThreeBackground from '../components/ThreeBackground.jsx'
 import TopNav from '../components/TopNav.jsx'
 
-function Badge({ text, col }) {
+function Badge({ text, col, pulse = false }) {
   return (
-    <span className="mono" style={{ fontSize: 11, padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(0,180,255,0.10)', background: 'rgba(255,255,255,0.02)', color: col, fontWeight: 900, letterSpacing: '0.14em' }}>
+    <span
+      className={`mono ${pulse ? 'statusPulse' : ''}`}
+      style={{ fontSize: 11, padding: '4px 10px', borderRadius: 999, border: '1px solid rgba(0,180,255,0.10)', background: 'rgba(255,255,255,0.02)', color: col, fontWeight: 900, letterSpacing: '0.14em' }}
+    >
       {text}
     </span>
   )
@@ -103,7 +106,7 @@ export default function P2PMarketplace() {
                   return (
                     <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '1fr 0.8fr 0.8fr 0.8fr 0.8fr', gap: 10, padding: '10px 10px', borderRadius: 14, border: '1px solid rgba(0,180,255,0.06)', background: 'rgba(255,255,255,0.02)', alignItems: 'center' }}>
                       <div className="mono" style={{ fontWeight: 900, color: 'rgba(223,240,255,0.9)' }}>{t.id}</div>
-                      <div><Badge text={t.status} col={col} /></div>
+                      <div><Badge text={t.status} col={col} pulse /></div>
                       <div className="mono">{t.user}</div>
                       <div className="mono" style={{ textAlign: 'right' }}>{t.amount}</div>
                       <div className="mono" style={{ textAlign: 'right', color: 'var(--muted)' }}>{t.time}</div>
@@ -178,7 +181,7 @@ export default function P2PMarketplace() {
                   fontWeight: 800,
                   letterSpacing: '0.16em',
                   cursor: 'none',
-                  boxShadow: '0 0 28px rgba(240,180,41,0.16)',
+                  boxShadow: '0 0 28px rgba(240,180,41,0.16), inset 0 1px 0 rgba(255,255,255,0.55)',
                 }}
               >
                 RELEASE ESCROW →

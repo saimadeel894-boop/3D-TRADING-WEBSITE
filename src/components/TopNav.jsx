@@ -149,23 +149,14 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
             </div>
             <div
               title={`Connection: ${connectionStatus}`}
+              className="healthDot"
               style={{
-                width: 12,
-                height: 12,
-                borderRadius: 999,
-                border: '1px solid rgba(255,255,255,0.18)',
-                background:
+                '--dotColor':
                   connectionStatus === 'connected'
                     ? 'rgba(0,230,118,0.95)'
                     : connectionStatus === 'disconnected'
                       ? 'rgba(255,61,113,0.95)'
                       : 'rgba(240,180,41,0.95)',
-                boxShadow:
-                  connectionStatus === 'connected'
-                    ? '0 0 16px rgba(0,230,118,0.25)'
-                    : connectionStatus === 'disconnected'
-                      ? '0 0 16px rgba(255,61,113,0.25)'
-                      : '0 0 16px rgba(240,180,41,0.25)',
               }}
             />
           </div>
