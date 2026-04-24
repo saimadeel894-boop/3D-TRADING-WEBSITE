@@ -6,6 +6,8 @@ import Navbar from '../components/Navbar.jsx'
 import ParticlesBackground from '../components/ParticlesBackground.jsx'
 import { useRafCountUp } from '../hooks/useRafCountUp.js'
 import CinematicRays from '../components/CinematicRays.jsx'
+import TiltCard from '../components/TiltCard.jsx'
+import HaloWrap from '../components/HaloWrap.jsx'
 
 function splitLetters(text) {
   return [...text]
@@ -117,7 +119,7 @@ export default function Landing() {
             </motion.div>
 
             <motion.div
-              className="mt-10 glass glass-hover flex flex-wrap items-center gap-5 rounded-3xl px-5 py-4"
+              className="mt-10 glass glass-hover boot-pulse flex flex-wrap items-center gap-5 rounded-3xl px-5 py-4"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.85, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
@@ -155,14 +157,16 @@ export default function Landing() {
             transition={{ delay: 0.25, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
             className="relative"
           >
-            <div className="glass rounded-[44px] p-4 md:p-6">
-              <div className="relative aspect-square overflow-hidden rounded-[36px] border border-glass bg-[#070a14]">
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(closest-side,rgba(59,130,246,0.18),rgba(139,92,246,0.06),rgba(10,14,26,0))]" />
-                <div className="absolute inset-0">
-                  <Globe3D className="h-full w-full" bloom />
-                </div>
+            <TiltCard tilt={9} scale={1.015} className="rounded-[44px]">
+              <div className="glass rounded-[44px] p-4 md:p-6">
+                <HaloWrap className="relative aspect-square overflow-hidden rounded-[36px] border border-glass bg-[#070a14]">
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(closest-side,rgba(59,130,246,0.18),rgba(139,92,246,0.06),rgba(10,14,26,0))]" />
+                  <div className="absolute inset-0">
+                    <Globe3D className="h-full w-full" bloom />
+                  </div>
+                </HaloWrap>
               </div>
-            </div>
+            </TiltCard>
           </motion.div>
         </div>
 
