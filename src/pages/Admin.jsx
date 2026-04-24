@@ -9,6 +9,7 @@ import { useRafCountUp } from '../hooks/useRafCountUp.js'
 import { Activity, DollarSign, Layers, TrendingUp } from 'lucide-react'
 import CinematicRays from '../components/CinematicRays.jsx'
 import GridFloor from '../components/GridFloor.jsx'
+import Reveal from '../components/Reveal.jsx'
 
 function fmtInt(n) {
   return Math.round(n).toLocaleString()
@@ -70,14 +71,20 @@ export default function Admin() {
               />
             </div>
 
-            <AdminCharts />
+            <Reveal>
+              <AdminCharts />
+            </Reveal>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <TradesTable />
-              <Leaderboard />
-            </div>
+            <Reveal delay={0.05}>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <TradesTable />
+                <Leaderboard />
+              </div>
+            </Reveal>
 
-            <PlatformControls />
+            <Reveal delay={0.08}>
+              <PlatformControls />
+            </Reveal>
           </div>
         </div>
       </div>
