@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
+import RouteTransition from './components/RouteTransition.jsx'
 
 const Landing = lazy(() => import('./pages/Landing.jsx'))
 const Terminal = lazy(() => import('./pages/Terminal.jsx'))
@@ -33,6 +34,7 @@ function App() {
         </div>
       }
     >
+      <RouteTransition routeKey={location.pathname} />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route

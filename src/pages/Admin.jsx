@@ -8,6 +8,7 @@ import PlatformControls from '../components/PlatformControls.jsx'
 import { useRafCountUp } from '../hooks/useRafCountUp.js'
 import { Activity, DollarSign, Layers, TrendingUp } from 'lucide-react'
 import CinematicRays from '../components/CinematicRays.jsx'
+import GridFloor from '../components/GridFloor.jsx'
 
 function fmtInt(n) {
   return Math.round(n).toLocaleString()
@@ -25,6 +26,7 @@ export default function Admin() {
       <div className="absolute inset-0 bg-hero-linear" />
       <div className="absolute inset-0 bg-hero-radial opacity-70" />
       <CinematicRays className="opacity-55" />
+      <GridFloor className="opacity-65" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-5 pt-28 pb-24">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">

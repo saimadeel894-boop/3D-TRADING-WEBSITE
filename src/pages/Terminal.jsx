@@ -9,6 +9,7 @@ import { useLivePrices } from '../hooks/useLivePrice.js'
 import TiltCard from '../components/TiltCard.jsx'
 import Globe3D from '../components/Globe3D.jsx'
 import CinematicRays from '../components/CinematicRays.jsx'
+import GridFloor from '../components/GridFloor.jsx'
 
 export default function Terminal() {
   const { bySymbol } = useLivePrices({ intervalMs: 1000 })
@@ -21,6 +22,7 @@ export default function Terminal() {
       <div className="absolute inset-0 bg-hero-linear" />
       <div className="absolute inset-0 bg-hero-radial opacity-70" />
       <CinematicRays />
+      <GridFloor className="opacity-75" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-5 pt-28 pb-24">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[52px_1fr_280px]">
