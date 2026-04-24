@@ -205,22 +205,6 @@ export default function P2PMarketplace() {
                   </div>
                 ))}
               </div>
-              <div
-                className="mono"
-                style={{
-                  marginTop: 10,
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr',
-                  gap: 8,
-                  borderTop: '1px solid rgba(0,180,255,0.12)',
-                  paddingTop: 10,
-                  color: 'rgba(223,240,255,0.82)',
-                }}
-              >
-                <div>Total Trades: 1842</div>
-                <div>Avg Time: 4.2m</div>
-                <div>Disputes: 0.8%</div>
-              </div>
             </div>
 
             <button type="button" className="btn mono" onClick={() => nav('/')} style={{ cursor: 'none' }}>

@@ -39,34 +39,33 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
   )
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, padding: '10px 16px 8px' }}>
+    <div style={{ position: 'relative', zIndex: 1, padding: '8px 16px 6px' }}>
       <div
         className="glass"
         style={{
           borderRadius: 18,
-          padding: '8px 12px',
+          padding: '6px 12px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 12,
+          gap: 10,
           minHeight: 52,
+          whiteSpace: 'nowrap',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 280 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 220, whiteSpace: 'nowrap' }}>
           <HexLogo />
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ fontWeight: 900, letterSpacing: '-0.03em', fontSize: 16 }}>
-                VERTEX<span style={{ color: 'var(--cyan)' }}>PRO</span>
-              </div>
-              <span className="pill mono" style={{ color: 'var(--gold)' }}>
-                ELITE TRADING SYSTEM
-              </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
+            <div style={{ fontWeight: 900, letterSpacing: '-0.03em', fontSize: 16 }}>
+              VERTEX<span style={{ color: 'var(--cyan)' }}>PRO</span>
             </div>
+            <span className="pill mono" style={{ color: 'var(--gold)', padding: '4px 8px' }}>
+              ELITE
+            </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
           {tabs.map((t) => (
             <NavLink
               key={t.label}
@@ -90,7 +89,7 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
           ))}
         </div>
 
-        <div style={{ flex: 1, maxWidth: 520 }}>
+        <div style={{ flex: 1, maxWidth: 420, overflow: 'hidden' }}>
           <div
             className="mono"
             style={{
@@ -98,12 +97,13 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
               alignItems: 'center',
               justifyContent: 'flex-start',
               gap: 24,
-              padding: '10px 12px',
+              padding: '8px 10px',
               borderRadius: 999,
               border: '1px solid rgba(0,180,255,0.08)',
               background: 'rgba(255,255,255,0.015)',
               overflow: 'hidden',
               cursor: 'none',
+              whiteSpace: 'nowrap',
             }}
           >
             {items.slice(0, 4).map((it, idx) => {
@@ -116,7 +116,8 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
                     flexDirection: 'column',
                     alignItems: 'flex-end',
                     gap: 2,
-                    minWidth: 120,
+                    minWidth: 110,
+                    flexShrink: 0,
                     borderRight: idx < 3 ? '1px solid rgba(0,180,255,0.15)' : 'none',
                     paddingRight: idx < 3 ? 16 : 0,
                   }}
@@ -134,7 +135,7 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
           <button type="button" className="btn mono" onClick={() => {}} style={{ cursor: 'none', borderRadius: 999 }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <Wallet size={16} /> DEPOSIT

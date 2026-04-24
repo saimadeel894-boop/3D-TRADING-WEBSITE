@@ -112,7 +112,9 @@ export default function CandlestickChart({
       const minP = Math.min(...data.map((c) => c.l))
       const maxP = Math.max(...data.map((c) => c.h))
       const pRange = Math.max(1e-9, maxP - minP)
-      const yOf = (p) => 18 + ((maxP + pRange * 0.08 - p) / (pRange * 1.16)) * (priceH - 26)
+      const topPad = 18
+      const chartH = priceH - 26
+      const yOf = (p) => topPad + (chartH - ((p - (minP - pRange * 0.08)) / (pRange * 1.16)) * chartH)
 
       ctx.strokeStyle = 'rgba(0,180,255,0.06)'
       ctx.lineWidth = 1
@@ -147,7 +149,7 @@ export default function CandlestickChart({
         ctx.fillRect(x, Math.min(yO, yC), cw, Math.max(2, Math.abs(yC - yO)))
 
         const vh = (c.v / maxV) * (volH - 8)
-        ctx.fillStyle = up ? 'rgba(0,230,118,0.22)' : 'rgba(255,61,113,0.2)'
+        ctx.fillStyle = up ? 'rgba(0,230,118,0.3)' : 'rgba(255,61,113,0.3)'
         ctx.fillRect(x, volTop + volH - vh, cw, vh)
       }
 
@@ -305,7 +307,17 @@ export default function CandlestickChart({
           </div>
         </div>
       </div>
-      <div style={{ position: 'relative', height: 'calc(100% - 66px)', minHeight: 360, overflow: 'hidden' }}>
+      <div
+        style={{
+          position: 'relative',
+          height: 'calc(100% - 66px)',
+          minHeight: 360,
+          overflow: 'hidden',
+          background: '#060e1a',
+          borderLeft: '1px solid rgba(0,180,255,0.1)',
+          borderRight: '1px solid rgba(0,180,255,0.1)',
+        }}
+      >
         <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
         <div style={{ position: 'absolute', right: 12, top: 10, display: 'flex', gap: 8 }}>
           <span className="pill mono" style={{ color: 'rgba(139,92,246,0.9)', background: 'rgba(139,92,246,0.12)' }}>EMA 9/21</span>

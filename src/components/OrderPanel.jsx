@@ -82,8 +82,22 @@ function OrderPanel({
   }
 
   const execCol = tab === 'SELL' ? 'var(--red)' : tab === 'LIMIT' ? 'var(--gold)' : 'var(--green)'
-  const asks = useMemo(() => withTotals((book?.asks || []).slice(0, 5)), [book])
-  const bids = useMemo(() => withTotals((book?.bids || []).slice(0, 5)), [book])
+  const asks = useMemo(() => {
+    const base = Number(price || book?.asks?.[0]?.price || 0)
+    const out = Array.from({ length: 5 }).map((_, i) => ({
+      price: base + (i + 1) * 0.5,
+      size: Number(book?.asks?.[i]?.size || (0.08 + i * 0.02)),
+    }))
+    return withTotals(out)
+  }, [book, price])
+  const bids = useMemo(() => {
+    const base = Number(price || book?.bids?.[0]?.price || 0)
+    const out = Array.from({ length: 5 }).map((_, i) => ({
+      price: base - (i + 1) * 0.5,
+      size: Number(book?.bids?.[i]?.size || (0.08 + i * 0.02)),
+    }))
+    return withTotals(out)
+  }, [book, price])
   const askMax = asks.length ? asks[asks.length - 1].total || 1 : 1
   const bidMax = bids.length ? bids[bids.length - 1].total || 1 : 1
 

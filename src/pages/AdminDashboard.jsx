@@ -57,7 +57,7 @@ export default function AdminDashboard() {
       { label: 'Volume', value: '$8.42M', top: '#00d4ff' },
       { label: 'Users', value: '1,284', top: '#00e676' },
       { label: 'Revenue', value: '$24,180', top: '#f0b429' },
-      { label: 'Escrow', value: '847', top: '#8b5cf6' },
+      { label: 'P2P Escrow Locked', value: '$142K', top: '#8b5cf6', sub: '28 active trades' },
     ],
     [],
   )
@@ -150,6 +150,11 @@ export default function AdminDashboard() {
                 <div className="mono" style={{ fontSize: 22, fontWeight: 900, marginTop: 10 }}>
                   {k.value}
                 </div>
+                {k.sub ? (
+                  <div className="mono" style={{ marginTop: 4, color: 'var(--muted)', fontSize: 11 }}>
+                    {k.sub}
+                  </div>
+                ) : null}
                 <div style={{ marginTop: 12 }}>
                   <Bar v={k.label === 'Users' ? 62 : k.label === 'Revenue' ? 44 : k.label === 'Escrow' ? 58 : 71} col={`linear-gradient(90deg, ${k.top}, rgba(255,255,255,0))`} />
                 </div>
