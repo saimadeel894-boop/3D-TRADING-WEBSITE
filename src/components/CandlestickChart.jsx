@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { ColorType, CrosshairMode, createChart } from 'lightweight-charts'
+import { CandlestickSeries, ColorType, CrosshairMode, createChart } from 'lightweight-charts'
 
 export default function CandlestickChart({
   pair = 'BTC/USDT',
@@ -37,14 +37,18 @@ export default function CandlestickChart({
       rightPriceScale: { borderColor: 'rgba(0,242,255,0.15)' },
       timeScale: { borderColor: 'rgba(0,242,255,0.15)', timeVisible: true },
     })
-    const series = chart.addCandlestickSeries({
+    const seriesOptions = {
       upColor: '#00FF41',
       downColor: '#FF3131',
       borderUpColor: '#00FF41',
       borderDownColor: '#FF3131',
       wickUpColor: '#00FF41',
       wickDownColor: '#FF3131',
-    })
+    }
+    const series =
+      typeof chart.addCandlestickSeries === 'function'
+        ? chart.addCandlestickSeries(seriesOptions)
+        : chart.addSeries(CandlestickSeries, seriesOptions)
     chartRef.current = chart
     seriesRef.current = series
 
