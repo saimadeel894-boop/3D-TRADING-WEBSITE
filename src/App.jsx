@@ -16,6 +16,8 @@ function Cursor() {
     const onMove = (e) => {
       pos.current.x = e.clientX
       pos.current.y = e.clientY
+      document.body.style.setProperty('--x', `${e.clientX}px`)
+      document.body.style.setProperty('--y', `${e.clientY}px`)
       const d = dotRef.current
       if (d) d.style.transform = `translate3d(${pos.current.x}px, ${pos.current.y}px, 0)`
     }
@@ -47,7 +49,7 @@ function Cursor() {
 function PageShell({ children }) {
   return (
     <motion.div
-      className="min-h-screen scanlines noise"
+      className="min-h-screen scanlines noise scanlineSweep"
       initial={{ opacity: 0, filter: 'blur(10px)' }}
       animate={{ opacity: 1, filter: 'blur(0px)' }}
       exit={{ opacity: 0, filter: 'blur(12px)' }}

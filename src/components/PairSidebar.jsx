@@ -79,7 +79,7 @@ function PairSidebar({ pairs, tickers, selected, onSelect }) {
           cursor: 'none',
         }}
       />
-      <div style={{ height: 'calc(100% - 76px)', overflow: 'auto', paddingRight: 4 }}>
+      <div className="pairListScroll" style={{ height: 'calc(100% - 76px)', overflow: 'auto', paddingRight: 4 }}>
         {filtered.map((p) => {
           const key = p.toUpperCase()
           const t = tickers?.[key]

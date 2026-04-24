@@ -4,6 +4,7 @@ import ThreeBackground from '../components/ThreeBackground.jsx'
 import TopNav from '../components/TopNav.jsx'
 import { usePlatformStats } from '../hooks/usePlatformStats.js'
 import { useMultiTicker } from '../hooks/useMultiTicker.js'
+import { MetricCard, Panel, SectionHeader } from '../components/ui/Primitives.jsx'
 
 function Bar({ v, col }) {
   return (
@@ -109,36 +110,29 @@ export default function AdminDashboard() {
       <TopNav ticker={ticker} />
 
       <div className="pagePad" style={{ position: 'relative', zIndex: 10 }}>
-        <div className="glass" style={{ borderRadius: 18, padding: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em' }}>ADMIN COMMAND CENTER</div>
-              <div className="mono" style={{ marginTop: 6, color: 'var(--muted)' }}>
-                Threat-aware monitoring • Risk controls • Endpoint surface
+        <Panel>
+          <SectionHeader
+            title="Admin Command Center"
+            subtitle="Threat-aware monitoring • risk controls • endpoint surface"
+            right={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Badge col="var(--green)">● LIVE MONITORING</Badge>
+                <button type="button" className="btn mono" onClick={() => nav('/')} style={{ cursor: 'none' }}>
+                  Back to Terminal
+                </button>
               </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Badge col="var(--green)">● LIVE MONITORING</Badge>
-              <button type="button" className="btn mono" onClick={() => nav('/')} style={{ cursor: 'none' }}>
-                Back to Terminal
-              </button>
-            </div>
-          </div>
+            }
+          />
 
-          <div className="adminKpis" style={{ marginTop: 14 }}>
+          <div className="adminKpis" style={{ marginTop: 12 }}>
             {kpis.map((k) => (
-              <div key={k.label} className="glass glass-hover" style={{ borderRadius: 18, padding: 14, position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', inset: 0, borderTop: `3px solid ${k.top}` }} />
-                <div className="mono" style={{ color: 'var(--muted)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
-                  {k.label}
-                </div>
-                <div className="mono" style={{ fontSize: 22, fontWeight: 900, marginTop: 10 }}>
-                  {k.value}
-                </div>
-                <div style={{ marginTop: 12 }}>
-                  <Bar v={k.label === 'Users' ? 62 : k.label === 'Revenue' ? 44 : k.label === 'Escrow' ? 58 : 71} col={`linear-gradient(90deg, ${k.top}, rgba(255,255,255,0))`} />
-                </div>
-              </div>
+              <MetricCard
+                key={k.label}
+                label={k.label}
+                value={k.value}
+                tone={k.top}
+                footer={<Bar v={k.label === 'Users' ? 62 : k.label === 'Revenue' ? 44 : k.label === 'Escrow' ? 58 : 71} col={`linear-gradient(90deg, ${k.top}, rgba(255,255,255,0))`} />}
+              />
             ))}
           </div>
 
@@ -275,7 +269,7 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </Panel>
       </div>
     </div>
   )
