@@ -2,6 +2,56 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 
+function RimPlanet() {
+  const g = useRef(null)
+  const ring = useRef(null)
+
+  const { mat, ringMat } = useMemo(() => {
+    const m = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#050813'),
+      roughness: 0.7,
+      metalness: 0.1,
+      emissive: new THREE.Color('#06122a'),
+      emissiveIntensity: 0.8,
+    })
+    const rm = new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#7dd3fc'),
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    return { mat: m, ringMat: rm }
+  }, [])
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime()
+    if (g.current) g.current.rotation.y = t * 0.08
+    if (ring.current) ring.current.rotation.z = t * 0.12
+  })
+
+  return (
+    <group ref={g} position={[0, 0.4, -1.2]}>
+      <mesh>
+        <sphereGeometry args={[2.35, 64, 64]} />
+        <primitive attach="material" object={mat} />
+      </mesh>
+      <mesh position={[-0.38, 0.28, 2.1]}>
+        <sphereGeometry args={[0.08, 18, 18]} />
+        <meshBasicMaterial color="#00d4ff" transparent opacity={0.85} blending={THREE.AdditiveBlending} />
+      </mesh>
+      <mesh ref={ring} rotation={[Math.PI / 2.25, 0, 0]}>
+        <torusGeometry args={[2.85, 0.02, 10, 260]} />
+        <primitive attach="material" object={ringMat} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2.25, 0, 0]}>
+        <torusGeometry args={[2.85, 0.14, 8, 260]} />
+        <meshBasicMaterial color="#00d4ff" transparent opacity={0.06} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
+    </group>
+  )
+}
+
 function Particles() {
   const group = useRef(null)
 
@@ -34,6 +84,7 @@ function Particles() {
       transparent: true,
       opacity: 0.85,
       depthWrite: false,
+      blending: THREE.AdditiveBlending,
     })
     return { geo: g, mat: m }
   }, [])
@@ -48,13 +99,15 @@ function Particles() {
 
   return (
     <group ref={group}>
+      <fog attach="fog" args={['#050712', 7, 18]} />
       <points geometry={geo}>
         <primitive attach="material" object={mat} />
       </points>
-      <gridHelper args={[30, 40, '#0a2a3a', '#071a24']} position={[0, -2.2, 0]} />
+      <RimPlanet />
+      <gridHelper args={[36, 52, '#0a2a3a', '#061621']} position={[0, -2.35, 0]} />
       <ambientLight intensity={0.28} />
-      <pointLight intensity={0.8} color="#00d4ff" position={[2.2, 1.6, 2.4]} />
-      <pointLight intensity={0.5} color="#8b5cf6" position={[-2.4, 1.2, -1.8]} />
+      <pointLight intensity={1.2} color="#00d4ff" position={[2.2, 1.6, 2.4]} distance={18} />
+      <pointLight intensity={0.8} color="#8b5cf6" position={[-2.8, 1.4, -1.8]} distance={18} />
     </group>
   )
 }

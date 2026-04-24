@@ -43,7 +43,7 @@ export default function TopNav({ ticker }) {
       <div
         className="glass"
         style={{
-          borderRadius: 18,
+          borderRadius: 22,
           padding: 12,
           display: 'flex',
           alignItems: 'center',
@@ -76,10 +76,10 @@ export default function TopNav({ ticker }) {
               className="mono"
               style={({ isActive }) => ({
                 textDecoration: 'none',
-                padding: '10px 12px',
-                borderRadius: 14,
+                padding: '9px 12px',
+                borderRadius: 999,
                 border: `1px solid ${isActive ? 'rgba(0,212,255,0.28)' : 'rgba(0,180,255,0.08)'}`,
-                background: isActive ? 'rgba(0,212,255,0.08)' : 'rgba(255,255,255,0.02)',
+                background: isActive ? 'rgba(0,212,255,0.07)' : 'rgba(255,255,255,0.015)',
                 color: isActive ? 'var(--text)' : 'var(--muted)',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
@@ -101,9 +101,9 @@ export default function TopNav({ ticker }) {
               justifyContent: 'space-between',
               gap: 10,
               padding: '10px 12px',
-              borderRadius: 14,
+              borderRadius: 999,
               border: '1px solid rgba(0,180,255,0.08)',
-              background: 'rgba(255,255,255,0.02)',
+              background: 'rgba(255,255,255,0.015)',
               overflow: 'hidden',
               cursor: 'none',
             }}
@@ -126,12 +126,12 @@ export default function TopNav({ ticker }) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button type="button" className="btn mono" onClick={() => {}} style={{ cursor: 'none' }}>
+          <button type="button" className="btn mono" onClick={() => {}} style={{ cursor: 'none', borderRadius: 999 }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <Wallet size={16} /> DEPOSIT
             </span>
           </button>
-          <button type="button" className="btn btnPrimary mono" onClick={() => nav('/')} style={{ cursor: 'none' }}>
+          <button type="button" className="btn btnPrimary mono argusGlow" onClick={() => nav('/')} style={{ cursor: 'none', borderRadius: 999 }}>
             TRADE NOW
           </button>
           <div
