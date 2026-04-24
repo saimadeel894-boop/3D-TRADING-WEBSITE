@@ -13,6 +13,12 @@ function Cursor() {
   const dirty = useRef(false)
 
   useEffect(() => {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const isCoarse = window.matchMedia('(pointer: coarse)').matches
+    if (prefersReduced || isCoarse) return undefined
+
+    let active = true
+
     const onMove = (e) => {
       pos.current.x = e.clientX
       pos.current.y = e.clientY
@@ -20,6 +26,7 @@ function Cursor() {
     }
 
     const tick = () => {
+      if (!active) return
       ring.current.x += (pos.current.x - ring.current.x) * 0.14
       ring.current.y += (pos.current.y - ring.current.y) * 0.14
       const r = ringRef.current
@@ -32,10 +39,18 @@ function Cursor() {
       raf.current = requestAnimationFrame(tick)
     }
 
+    const onVisibility = () => {
+      active = document.visibilityState === 'visible'
+      if (active) raf.current = requestAnimationFrame(tick)
+    }
+
     window.addEventListener('mousemove', onMove, { passive: true })
+    document.addEventListener('visibilitychange', onVisibility)
     raf.current = requestAnimationFrame(tick)
     return () => {
+      active = false
       window.removeEventListener('mousemove', onMove)
+      document.removeEventListener('visibilitychange', onVisibility)
       cancelAnimationFrame(raf.current)
     }
   }, [])

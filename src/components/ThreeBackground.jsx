@@ -56,7 +56,7 @@ function Particles() {
   const group = useRef(null)
 
   const { geo, mat } = useMemo(() => {
-    const count = 1000
+    const count = 420
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
     const c1 = new THREE.Color('#33ecff')
@@ -131,8 +131,8 @@ export default function ThreeBackground() {
     >
       <Canvas
         camera={{ position: [0, 0.8, 8.5], fov: 55 }}
-        gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
-        dpr={[1, 2]}
+        gl={{ alpha: true, antialias: false, powerPreference: 'high-performance' }}
+        dpr={[1, 1.25]}
       >
         <color attach="background" args={['rgba(0,0,0,0)']} />
         <Particles />
