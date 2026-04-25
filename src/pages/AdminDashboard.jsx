@@ -120,9 +120,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, minHeight: '100%' }}>
-      <ThreeBackground />
-      <GlowingArc className="pointer-events-none fixed inset-x-0 top-[68px] z-0 h-[220px] w-full opacity-65" />
+    <div style={{ background: '#010409', minHeight: '100vh', overflow: 'auto', position: 'relative', zIndex: 1 }}>
       <TopNav ticker={ticker} />
 
       <div className="pagePad" style={{ position: 'relative', zIndex: 10 }}>

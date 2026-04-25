@@ -82,7 +82,7 @@ function PairSidebar({ tickers, selected, onSelect }) {
   }, [simulatedPrices, q, filter])
 
   return (
-    <div className="glass pairSidebar" style={{ borderRadius: 18, padding: 12, height: '100%', overflow: 'hidden' }}>
+    <div className="pairSidebar" style={{ background: 'rgba(6,14,26,0.95)', borderRight: '1px solid rgba(0,180,255,0.1)', padding: 12, height: '100%', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>Pairs</div>
         <div className="pill mono" style={{ color: 'var(--cyan)' }}>

@@ -60,41 +60,16 @@ function CustomCursor() {
   );
 }
 
-function PageShell({ children }) {
-  return <div className="min-h-screen scanlines noise">{children}</div>
-}
-
 export default function App() {
   return (
     <>
       <CustomCursor />
       <Routes>
-        <Route
-          path="/"
-          element={
-            <PageShell>
-              <TradingTerminal />
-            </PageShell>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <PageShell>
-              <AdminDashboard />
-            </PageShell>
-          }
-        />
-        <Route
-          path="/p2p"
-          element={
-            <PageShell>
-              <P2PMarketplace />
-            </PageShell>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/"      element={<TradingTerminal />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/p2p"   element={<P2PMarketplace />} />
+        <Route path="*"      element={<Navigate to="/" replace />} />
       </Routes>
     </>
-  )
+  );
 }

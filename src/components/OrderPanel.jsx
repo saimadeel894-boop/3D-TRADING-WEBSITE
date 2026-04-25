@@ -117,7 +117,7 @@ function OrderPanel({
   }
 
   return (
-    <div className="glass" style={{ borderRadius: 18, padding: 12, height: '100%', overflow: 'hidden' }}>
+    <div style={{ background: 'rgba(6,14,26,0.95)', borderLeft: '1px solid rgba(0,180,255,0.1)', padding: 12, height: '100%', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>Order</div>
         <div className="pill mono" style={{ color: 'var(--cyan)' }}>

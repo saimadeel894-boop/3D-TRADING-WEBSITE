@@ -238,89 +238,32 @@ export default function CandlestickChart({
       ctx.fillText('RSI', pad.l + 4, rsiTop + 12);
     };
 
-    const resize = () => {
-      canvas.width  = container.clientWidth;
-      canvas.height = container.clientHeight;
-      drawChart();
+    const setSize = () => {
+      const rect = container.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        canvas.width  = rect.width;
+        canvas.height = rect.height;
+        drawChart();
+      }
     };
-    resize();
-    const ro = new ResizeObserver(resize);
+
+    setSize();
+    const t1 = setTimeout(setSize, 100);
+    const t2 = setTimeout(setSize, 500);
+
+    const ro = new ResizeObserver(setSize);
     ro.observe(container);
 
-    return () => ro.disconnect();
-  }, [mergedCandles])
-
-  const last = mergedCandles[mergedCandles.length - 1]
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      ro.disconnect();
+    };
+  }, [mergedCandles, pair])
 
   return (
-    <div className="glass" style={{ borderRadius: 18, padding: 0, height: '100%', overflow: 'hidden' }}>
-      <div
-        style={{
-          background: 'rgba(6,14,26,0.9)',
-          borderBottom: '1px solid rgba(0,180,255,0.1)',
-          padding: '10px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-        }}
-      >
-        <div>
-          <div style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>{pair}</div>
-          <div className="mono" style={{ fontSize: 10, color: 'var(--muted)', marginTop: 3 }}>
-            O: {last ? fmt(last.o) : '—'} H: {last ? fmt(last.h) : '—'} L: {last ? fmt(last.l) : '—'} C: {last ? fmt(last.c) : '—'}
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="pill mono" style={{ color: status === 'connected' ? 'var(--green)' : status === 'disconnected' ? 'var(--red)' : 'var(--gold)' }}>
-            {isLoading ? 'LOADING' : status.toUpperCase()}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {intervals.map((it) => {
-              const active = it.toLowerCase() === interval.toLowerCase()
-              return (
-                <button
-                  key={it}
-                  type="button"
-                  onClick={() => onInterval?.(it)}
-                  className="mono"
-                  style={{
-                    borderRadius: 999,
-                    padding: '6px 10px',
-                    border: '1px solid var(--border)',
-                    background: active ? 'rgba(0,212,255,0.10)' : 'rgba(255,255,255,0.02)',
-                    color: active ? 'var(--text)' : 'var(--muted)',
-                    fontSize: 11,
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    cursor: 'none',
-                  }}
-                >
-                  {it}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-      <div
-        style={{
-          position: 'relative',
-          height: 'calc(100% - 66px)',
-          minHeight: 360,
-          overflow: 'hidden',
-          background: '#060e1a',
-          borderLeft: '1px solid rgba(0,180,255,0.1)',
-          borderRight: '1px solid rgba(0,180,255,0.1)',
-        }}
-      >
-        <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
-        <div style={{ position: 'absolute', right: 12, top: 10, display: 'flex', gap: 8 }}>
-          <span className="pill mono" style={{ color: 'rgba(139,92,246,0.9)', background: 'rgba(139,92,246,0.12)' }}>EMA 9/21</span>
-          <span className="pill mono" style={{ color: 'rgba(240,180,41,0.92)', background: 'rgba(240,180,41,0.14)' }}>RSI</span>
-          <span className="pill mono" style={{ color: 'rgba(0,212,255,0.92)', background: 'rgba(0,212,255,0.12)' }}>VOL MA</span>
-        </div>
-      </div>
+    <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0, minWidth: 0, background: 'rgba(6,14,26,0.88)' }}>
+      <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }} />
     </div>
   )
 }

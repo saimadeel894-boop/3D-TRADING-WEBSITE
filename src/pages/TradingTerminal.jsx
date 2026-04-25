@@ -72,7 +72,8 @@ export default function TradingTerminal() {
           minWidth: 0,
           borderLeft: '1px solid rgba(0,180,255,0.1)',
           borderRight: '1px solid rgba(0,180,255,0.1)',
-          background: 'rgba(6,14,26,0.85)'
+          background: 'rgba(6,14,26,0.88)',
+          backdropFilter: 'blur(2px)'
         }}>
           {/* Chart header */}
           <div style={{
