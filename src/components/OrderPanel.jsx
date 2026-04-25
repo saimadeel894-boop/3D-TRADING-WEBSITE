@@ -82,22 +82,8 @@ function OrderPanel({
   }
 
   const execCol = tab === 'SELL' ? 'var(--red)' : tab === 'LIMIT' ? 'var(--gold)' : 'var(--green)'
-  const asks = useMemo(() => {
-    const currentPrice = Number(price || 0)
-    const out = Array.from({ length: 5 }).map((_, i) => ({
-      price: currentPrice + (i + 1) * 0.50,
-      size: Number(book?.asks?.[i]?.size || (0.08 + i * 0.02)),
-    }))
-    return withTotals(out)
-  }, [book, price])
-  const bids = useMemo(() => {
-    const currentPrice = Number(price || 0)
-    const out = Array.from({ length: 5 }).map((_, i) => ({
-      price: currentPrice - (i + 1) * 0.50,
-      size: Number(book?.bids?.[i]?.size || (0.08 + i * 0.02)),
-    }))
-    return withTotals(out)
-  }, [book, price])
+  const asks = useMemo(() => withTotals((book?.asks || []).slice(0, 5)), [book])
+  const bids = useMemo(() => withTotals((book?.bids || []).slice(0, 5)), [book])
   const askMax = asks.length ? asks[asks.length - 1].total || 1 : 1
   const bidMax = bids.length ? bids[bids.length - 1].total || 1 : 1
 
@@ -117,7 +103,7 @@ function OrderPanel({
   }
 
   return (
-    <div style={{ background: 'rgba(6,14,26,0.95)', borderLeft: '1px solid rgba(0,180,255,0.1)', padding: 12, height: '100%', overflow: 'hidden' }}>
+    <div className="glass" style={{ borderRadius: 18, padding: 12, height: '100%', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>Order</div>
         <div className="pill mono" style={{ color: 'var(--cyan)' }}>
@@ -286,7 +272,7 @@ function OrderPanel({
             const pct = (r.total || 0) / askMax
             return (
               <div key={`a-${i}`} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', padding: '7px 8px', border: '1px solid rgba(255,255,255,0.02)', background: 'rgba(255,255,255,0.01)' }}>
-                <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 70)}%`, background: 'rgba(255,61,113,0.10)', right: 0, marginLeft: 'auto' }} />
+                <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 100)}%`, background: 'rgba(255,61,113,0.10)', right: 0, marginLeft: 'auto' }} />
                 <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, alignItems: 'center' }}>
                   <div style={{ color: 'var(--red)', fontWeight: 700 }}>${fmt(r.price)}</div>
                   <div style={{ textAlign: 'right' }}>{fmt(r.size, 3)}</div>
@@ -303,7 +289,7 @@ function OrderPanel({
             const pct = (r.total || 0) / bidMax
             return (
               <div key={`b-${i}`} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', padding: '7px 8px', border: '1px solid rgba(255,255,255,0.02)', background: 'rgba(255,255,255,0.01)' }}>
-                <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 70)}%`, background: 'rgba(0,230,118,0.10)', right: 0, marginLeft: 'auto' }} />
+                <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 100)}%`, background: 'rgba(0,230,118,0.10)', right: 0, marginLeft: 'auto' }} />
                 <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, alignItems: 'center' }}>
                   <div style={{ color: 'var(--green)', fontWeight: 700 }}>${fmt(r.price)}</div>
                   <div style={{ textAlign: 'right' }}>{fmt(r.size, 3)}</div>

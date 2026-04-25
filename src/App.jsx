@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect, useRef } from 'react';
+import { Route, Routes } from 'react-router-dom'
 import TradingTerminal from './pages/TradingTerminal.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import P2PMarketplace from './pages/P2PMarketplace.jsx'
@@ -7,12 +7,13 @@ import P2PMarketplace from './pages/P2PMarketplace.jsx'
 function CustomCursor() {
   const dotRef  = useRef(null);
   const ringRef = useRef(null);
-  let rx = 0, ry = 0;
 
   useEffect(() => {
     const dot  = dotRef.current;
     const ring = ringRef.current;
-    let mx = 0, my = 0;
+    if (!dot || !ring) return;
+
+    let rx = 0, ry = 0, mx = 0, my = 0, rafId;
 
     const onMove = (e) => {
       mx = e.clientX;
@@ -26,31 +27,36 @@ function CustomCursor() {
       ry += (my - ry) * 0.15;
       ring.style.left = rx + 'px';
       ring.style.top  = ry + 'px';
-      requestAnimationFrame(follow);
+      rafId = requestAnimationFrame(follow);
     };
 
     document.addEventListener('mousemove', onMove);
     follow();
-    return () => document.removeEventListener('mousemove', onMove);
+
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   return (
     <>
       <div ref={dotRef} style={{
         position: 'fixed',
-        width: 10, height: 10,
+        width: 10,
+        height: 10,
         background: '#00d4ff',
         borderRadius: '50%',
         pointerEvents: 'none',
         zIndex: 99999,
         transform: 'translate(-50%,-50%)',
-        boxShadow: '0 0 12px #00d4ff',
-        transition: 'transform 0.08s'
+        boxShadow: '0 0 14px #00d4ff, 0 0 4px #00d4ff'
       }} />
       <div ref={ringRef} style={{
         position: 'fixed',
-        width: 32, height: 32,
-        border: '1px solid rgba(0,212,255,0.45)',
+        width: 32,
+        height: 32,
+        border: '1px solid rgba(0,212,255,0.5)',
         borderRadius: '50%',
         pointerEvents: 'none',
         zIndex: 99998,
@@ -68,7 +74,6 @@ export default function App() {
         <Route path="/"      element={<TradingTerminal />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/p2p"   element={<P2PMarketplace />} />
-        <Route path="*"      element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );
