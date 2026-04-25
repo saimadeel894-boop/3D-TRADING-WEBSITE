@@ -73,13 +73,28 @@ export default function HomePage() {
   useEffect(() => {
     const el = spotlightRef.current;
     if (!el) return;
-    const onMove = (e) => {
-      el.style.left = e.clientX + 'px';
-      el.style.top  = e.clientY + 'px';
-      mousePosRef.current = { x: e.clientX, y: e.clientY };
+
+    let rafId;
+    let targetX = innerWidth / 2;
+    let targetY = innerHeight / 2;
+
+    const render = () => {
+      el.style.left = targetX + 'px';
+      el.style.top  = targetY + 'px';
+      rafId = requestAnimationFrame(render);
     };
-    window.addEventListener('mousemove', onMove);
-    return () => window.removeEventListener('mousemove', onMove);
+    rafId = requestAnimationFrame(render);
+
+    const onMove = (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+      mousePosRef.current = { x: targetX, y: targetY };
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // ── Three.js particle background ─────────────
@@ -187,7 +202,7 @@ export default function HomePage() {
       camera.updateProjectionMatrix();
       renderer.setSize(innerWidth, innerHeight);
     };
-    window.addEventListener('resize', onResize);
+    window.addEventListener('resize', onResize, { passive: true });
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
