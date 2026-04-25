@@ -5,105 +5,81 @@ function fmt(n, sym) {
   return n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
-function label(p) {
-  return p.replace('usdt', '/USDT').toUpperCase()
-}
+const allPairs = [
+  // CRYPTO
+  {name:'BTC/USDT', category:'crypto', base:77685},
+  {name:'ETH/USDT', category:'crypto', base:2315},
+  {name:'SOL/USDT', category:'crypto', base:86.36},
+  {name:'BNB/USDT', category:'crypto', base:637},
+  {name:'XRP/USDT', category:'crypto', base:1.44},
+  // FOREX
+  {name:'EUR/USD',  category:'forex', base:1.0842},
+  {name:'GBP/USD',  category:'forex', base:1.2765},
+  {name:'USD/JPY',  category:'forex', base:154.82},
+  {name:'AUD/USD',  category:'forex', base:0.6534},
+  {name:'USD/CAD',  category:'forex', base:1.3621},
+  {name:'EUR/GBP',  category:'forex', base:0.8489},
+  {name:'USD/CHF',  category:'forex', base:0.9012},
+  {name:'NZD/USD',  category:'forex', base:0.6022},
+  {name:'EUR/JPY',  category:'forex', base:167.43},
+  {name:'GBP/JPY',  category:'forex', base:197.65},
+  // OTC
+  {name:'OTC EUR',  category:'otc',   base:1.0890},
+  {name:'OTC GBP',  category:'otc',   base:1.2712},
+];
 
-const EXTRA_PAIRS = [
-  { key: 'EUR/USD', symbol: 'EUR/USD', type: 'FOREX', price: 1.0842 },
-  { key: 'GBP/USD', symbol: 'GBP/USD', type: 'FOREX', price: 1.2764 },
-  { key: 'USD/JPY', symbol: 'USD/JPY', type: 'FOREX', price: 153.42 },
-  { key: 'AUD/USD', symbol: 'AUD/USD', type: 'FOREX', price: 0.6621 },
-  { key: 'USD/CAD', symbol: 'USD/CAD', type: 'FOREX', price: 1.3618 },
-  { key: 'EUR/GBP', symbol: 'EUR/GBP', type: 'FOREX', price: 0.8492 },
-  { key: 'USD/CHF', symbol: 'USD/CHF', type: 'FOREX', price: 0.9034 },
-  { key: 'NZD/USD', symbol: 'NZD/USD', type: 'FOREX', price: 0.6112 },
-  { key: 'EUR/JPY', symbol: 'EUR/JPY', type: 'FOREX', price: 166.32 },
-  { key: 'GBP/JPY', symbol: 'GBP/JPY', type: 'FOREX', price: 195.74 },
-  { key: 'OTC EUR', symbol: 'OTC EUR', type: 'OTC', price: 1.0831 },
-  { key: 'OTC GBP', symbol: 'OTC GBP', type: 'OTC', price: 1.2741 },
-]
-
-function PairSidebar({ pairs, tickers, selected, onSelect }) {
+function PairSidebar({ tickers, selected, onSelect }) {
   const [q, setQ] = useState('')
   const [filter, setFilter] = useState('ALL')
-  const [extras, setExtras] = useState(EXTRA_PAIRS)
+  const [simulatedPrices, setSimulatedPrices] = useState(() => 
+    allPairs.map(p => ({ ...p, price: p.base, change: 0 }))
+  )
   const [flashMap, setFlashMap] = useState({})
-  const prevPriceRef = useRef({})
   const flashTimersRef = useRef({})
 
   useEffect(() => {
     const id = window.setInterval(() => {
-      setExtras((prev) =>
+      setSimulatedPrices((prev) =>
         prev.map((row) => {
-          const drift = (Math.random() - 0.5) * 0.0012
+          // Sync with real tickers if crypto and available
+          const isCrypto = row.category === 'crypto';
+          const tKey = row.name.replace('/', '').toUpperCase();
+          const realTicker = tickers?.[tKey];
+          
+          if (isCrypto && realTicker?.price) {
+            return {
+              ...row,
+              price: realTicker.price,
+              change: Number.parseFloat(realTicker.change ?? '0')
+            }
+          }
+          
+          const drift = (Math.random() - 0.5) * 0.0012;
           return {
             ...row,
             price: row.price * (1 + drift),
             change: drift * 100,
           }
-        }),
+        })
       )
     }, 1200)
     return () => window.clearInterval(id)
-  }, [])
+  }, [tickers])
 
   useEffect(() => {
-    const nextFlashes = {}
-    for (const p of pairs || []) {
-      const key = p.toUpperCase()
-      const next = tickers?.[key]?.price
-      const prev = prevPriceRef.current[key]
-      if (Number.isFinite(prev) && Number.isFinite(next) && prev !== next) {
-        nextFlashes[p] = next > prev ? 'flash-green' : 'flash-red'
-        if (flashTimersRef.current[p]) window.clearTimeout(flashTimersRef.current[p])
-        flashTimersRef.current[p] = window.setTimeout(() => {
-          setFlashMap((m) => {
-            if (!m[p]) return m
-            const n = { ...m }
-            delete n[p]
-            return n
-          })
-          delete flashTimersRef.current[p]
-        }, 300)
-      }
-      if (Number.isFinite(next)) prevPriceRef.current[key] = next
-    }
-    if (Object.keys(nextFlashes).length) {
-      setFlashMap((m) => ({ ...m, ...nextFlashes }))
-    }
-  }, [pairs, tickers])
-
-  useEffect(
-    () => () => {
+    return () => {
       for (const t of Object.values(flashTimersRef.current)) window.clearTimeout(t)
-    },
-    [],
-  )
-
-  const rows = useMemo(() => {
-    const cryptoRows = (pairs || []).map((p) => {
-      const key = p.toUpperCase()
-      const t = tickers?.[key]
-      return {
-        key: p,
-        symbol: label(p),
-        type: 'CRYPTO',
-        price: t?.price ?? 0,
-        change: Number.parseFloat(t?.change ?? '0'),
-      }
-    })
-    return [...cryptoRows, ...extras]
-  }, [pairs, tickers, extras])
+    }
+  }, [])
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase()
-    return rows.filter((r) => {
-      const typeMatch = filter === 'ALL' ? true : r.type === filter
-      const searchMatch = !qq ? true : r.symbol.toLowerCase().includes(qq)
+    return simulatedPrices.filter((r) => {
+      const typeMatch = filter === 'ALL' ? true : r.category.toUpperCase() === filter
+      const searchMatch = !qq ? true : r.name.toLowerCase().includes(qq)
       return typeMatch && searchMatch
     })
-  }, [rows, q, filter])
+  }, [simulatedPrices, q, filter])
 
   return (
     <div className="glass pairSidebar" style={{ borderRadius: 18, padding: 12, height: '100%', overflow: 'hidden' }}>
@@ -131,7 +107,7 @@ function PairSidebar({ pairs, tickers, selected, onSelect }) {
           cursor: 'none',
         }}
       />
-      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 8, overflowX: 'auto', paddingBottom: 4 }}>
         {['ALL', 'FOREX', 'OTC', 'CRYPTO'].map((name) => (
           <button
             key={name}
@@ -147,6 +123,7 @@ function PairSidebar({ pairs, tickers, selected, onSelect }) {
               fontSize: 10,
               letterSpacing: '0.14em',
               cursor: 'none',
+              flexShrink: 0,
             }}
           >
             {name}
@@ -155,16 +132,17 @@ function PairSidebar({ pairs, tickers, selected, onSelect }) {
       </div>
       <div style={{ height: 'calc(100% - 112px)', overflow: 'auto', paddingRight: 4 }}>
         {filtered.map((row) => {
-          const sym = row.symbol
+          const sym = row.name
           const price = row.price
-          const change = Number.parseFloat(row.change ?? '0')
-          const isSel = row.key === selected
+          const change = row.change
+          const rowKey = row.category === 'crypto' ? row.name.replace('/', '').toLowerCase() : row.name
+          const isSel = rowKey === selected
           const up = change >= 0
           return (
             <button
-              key={row.key}
+              key={rowKey}
               type="button"
-              onClick={() => onSelect(row.key)}
+              onClick={() => onSelect(rowKey)}
               style={{
                 width: '100%',
                 textAlign: 'left',
@@ -195,10 +173,10 @@ function PairSidebar({ pairs, tickers, selected, onSelect }) {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                 <div>
                   <div style={{ fontWeight: 800, letterSpacing: '-0.01em' }}>{sym}</div>
-                  <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{row.type}</div>
+                  <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{row.category.toUpperCase()}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div className={`mono ${flashMap[row.key] || ''}`} style={{ fontWeight: 700 }}>
+                  <div className={`mono ${flashMap[rowKey] || ''}`} style={{ fontWeight: 700 }}>
                     {price ? fmt(price, sym) : '—'}
                   </div>
                   <div

@@ -83,17 +83,17 @@ function OrderPanel({
 
   const execCol = tab === 'SELL' ? 'var(--red)' : tab === 'LIMIT' ? 'var(--gold)' : 'var(--green)'
   const asks = useMemo(() => {
-    const base = Number(price || book?.asks?.[0]?.price || 0)
+    const currentPrice = Number(price || 0)
     const out = Array.from({ length: 5 }).map((_, i) => ({
-      price: base + (i + 1) * 0.5,
+      price: currentPrice + (i + 1) * 0.50,
       size: Number(book?.asks?.[i]?.size || (0.08 + i * 0.02)),
     }))
     return withTotals(out)
   }, [book, price])
   const bids = useMemo(() => {
-    const base = Number(price || book?.bids?.[0]?.price || 0)
+    const currentPrice = Number(price || 0)
     const out = Array.from({ length: 5 }).map((_, i) => ({
-      price: base - (i + 1) * 0.5,
+      price: currentPrice - (i + 1) * 0.50,
       size: Number(book?.bids?.[i]?.size || (0.08 + i * 0.02)),
     }))
     return withTotals(out)
@@ -286,7 +286,7 @@ function OrderPanel({
             const pct = (r.total || 0) / askMax
             return (
               <div key={`a-${i}`} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', padding: '7px 8px', border: '1px solid rgba(255,255,255,0.02)', background: 'rgba(255,255,255,0.01)' }}>
-                <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 100)}%`, background: 'rgba(255,61,113,0.10)', right: 0, marginLeft: 'auto' }} />
+                <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 70)}%`, background: 'rgba(255,61,113,0.10)', right: 0, marginLeft: 'auto' }} />
                 <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, alignItems: 'center' }}>
                   <div style={{ color: 'var(--red)', fontWeight: 700 }}>${fmt(r.price)}</div>
                   <div style={{ textAlign: 'right' }}>{fmt(r.size, 3)}</div>
@@ -303,7 +303,7 @@ function OrderPanel({
             const pct = (r.total || 0) / bidMax
             return (
               <div key={`b-${i}`} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', padding: '7px 8px', border: '1px solid rgba(255,255,255,0.02)', background: 'rgba(255,255,255,0.01)' }}>
-                <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 100)}%`, background: 'rgba(0,230,118,0.10)', right: 0, marginLeft: 'auto' }} />
+                <div style={{ position: 'absolute', inset: 0, width: `${Math.round(pct * 70)}%`, background: 'rgba(0,230,118,0.10)', right: 0, marginLeft: 'auto' }} />
                 <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, alignItems: 'center' }}>
                   <div style={{ color: 'var(--green)', fontWeight: 700 }}>${fmt(r.price)}</div>
                   <div style={{ textAlign: 'right' }}>{fmt(r.size, 3)}</div>

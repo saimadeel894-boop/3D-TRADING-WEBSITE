@@ -54,14 +54,15 @@ function RimPlanet() {
 
 function Particles() {
   const group = useRef(null)
+  const count = 1200
 
   const { geo, mat } = useMemo(() => {
-    const count = 420
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
-    const c1 = new THREE.Color('#33ecff')
+    const c1 = new THREE.Color('#00d4ff')
     const c2 = new THREE.Color('#8b5cf6')
     const c3 = new THREE.Color('#f0b429')
+    
     for (let i = 0; i < count; i += 1) {
       const r = 4.2 + Math.random() * 6.6
       const theta = Math.random() * Math.PI * 2
@@ -69,8 +70,10 @@ function Particles() {
       positions[i * 3 + 0] = Math.cos(theta) * r
       positions[i * 3 + 1] = y
       positions[i * 3 + 2] = Math.sin(theta) * r
+      
       const pick = Math.random()
-      const col = pick < 0.55 ? c1 : pick < 0.86 ? c2 : c3
+      // 60% cyan, 25% purple, 15% gold
+      const col = pick < 0.60 ? c1 : pick < 0.85 ? c2 : c3
       colors[i * 3 + 0] = col.r
       colors[i * 3 + 1] = col.g
       colors[i * 3 + 2] = col.b
@@ -79,10 +82,10 @@ function Particles() {
     g.setAttribute('position', new THREE.BufferAttribute(positions, 3))
     g.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     const m = new THREE.PointsMaterial({
-      size: 0.06,
+      size: 0.055,
       vertexColors: true,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.85,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     })
@@ -98,6 +101,13 @@ function Particles() {
       group.current.position.x = state.pointer.x * 0.16
       group.current.position.y = state.pointer.y * 0.1
     }
+    
+    // Subtle Y-axis floating animation
+    const positions = geo.attributes.position.array;
+    for(let i = 0; i < count; i++) {
+       positions[i*3 + 1] += Math.sin(t * 0.3 + i) * 0.0003;
+    }
+    geo.attributes.position.needsUpdate = true;
   })
 
   return (
@@ -107,7 +117,13 @@ function Particles() {
         <primitive attach="material" object={mat} />
       </points>
       <RimPlanet />
-      <gridHelper args={[36, 52, '#0a2a3a', '#061621']} position={[0, -2.35, 0]} />
+      <gridHelper 
+        args={[36, 52, 0x003355, 0x003355]} 
+        position={[0, -3, 0]} 
+        rotation={[Math.PI * 0.08, 0, 0]}
+        material-transparent={true}
+        material-opacity={0.25}
+      />
       <ambientLight intensity={0.28} />
       <pointLight intensity={1.2} color="#00d4ff" position={[2.2, 1.6, 2.4]} distance={18} />
       <pointLight intensity={0.8} color="#8b5cf6" position={[-2.8, 1.4, -1.8]} distance={18} />
@@ -125,7 +141,7 @@ export default function ThreeBackground() {
         width: '100%',
         height: '100%',
         zIndex: 0,
-        opacity: 0.1,
+        opacity: 0.55,
         pointerEvents: 'none',
       }}
     >
@@ -140,4 +156,5 @@ export default function ThreeBackground() {
     </div>
   )
 }
+
 

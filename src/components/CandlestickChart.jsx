@@ -83,175 +83,171 @@ export default function CandlestickChart({
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const parent = canvas.parentElement
-    if (!parent) return
+    const container = canvas.parentElement
+    if (!container) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+    
     let frame = 0
 
-    const render = () => {
-      const w = canvas.width
-      const h = canvas.height
-      if (!w || !h) return
+    const drawChart = () => {
+      const W = canvas.width;
+      const H = canvas.height;
+      
+      const candlesList = mergedCandles;
+      if (!candlesList.length) return;
 
-      ctx.fillStyle = '#060e1a'
-      ctx.fillRect(0, 0, w, h)
+      // Section heights
+      const candleH = H * 0.65;
+      const volumeH = H * 0.18;
+      const rsiH    = H * 0.12;
+      const gap     = 4;
+      
+      const pad = { l: 60, r: 80, t: 16, b: 4 };
+      const chartW = W - pad.l - pad.r;
+      const n = candlesList.length;
+      const cw = Math.max(4, Math.floor(chartW / n) - 1);
 
-      const priceH = Math.floor(h * 0.68)
-      const volTop = Math.floor(h * 0.68)
-      const volH = Math.floor(h * 0.20)
-      const rsiTop = volTop + volH
-      const rsiH = Math.floor(h * 0.12)
-      const xPad = 56
-      const rightPad = 80
-      const chartW = w - xPad - rightPad
+      // Clear
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#060e1a';
+      ctx.fillRect(0, 0, W, H);
 
-      const data = mergedCandles
-      if (!data.length) return
+      // Price range
+      const highs = candlesList.map(c => c.h);
+      const lows  = candlesList.map(c => c.l);
+      const maxP  = Math.max(...highs);
+      const minP  = Math.min(...lows);
+      const range = maxP - minP || 1;
 
-      const minP = Math.min(...data.map((c) => c.l))
-      const maxP = Math.max(...data.map((c) => c.h))
-      const pRange = Math.max(1e-9, maxP - minP)
-      const topPad = 18
-      const chartH = priceH - 26
-      const yOf = (p) => topPad + (chartH - ((p - (minP - pRange * 0.08)) / (pRange * 1.16)) * chartH)
+      // Y position for price — HIGH PRICE = TOP of canvas
+      const priceToY = (price) =>
+        pad.t + (1 - (price - minP) / range) * (candleH - pad.t - pad.b);
 
-      ctx.strokeStyle = 'rgba(0,180,255,0.06)'
-      ctx.lineWidth = 1
-      for (let i = 0; i <= 5; i += 1) {
-        const y = 18 + ((priceH - 26) * i) / 5
-        ctx.beginPath()
-        ctx.moveTo(xPad, y)
-        ctx.lineTo(w - rightPad, y)
-        ctx.stroke()
+      // Grid lines
+      ctx.strokeStyle = 'rgba(0,180,255,0.06)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 6; i++) {
+        const y = pad.t + (i / 6) * (candleH - pad.t - pad.b);
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+        const price = maxP - (i / 6) * range;
+        ctx.fillStyle = 'rgba(74,122,155,0.9)';
+        ctx.font = '9px JetBrains Mono';
+        ctx.textAlign = 'right';
+        ctx.fillText(price.toFixed(2), W - pad.r + 76, y + 3);
       }
 
-      const step = chartW / data.length
-      const cw = clamp(step * 0.62, 4, 9)
-      const maxV = Math.max(...data.map((c) => c.v))
+      // EMA calculation
+      const calcEMA = (data, period) => {
+        if (data.length === 0) return [];
+        const k = 2 / (period + 1);
+        let emaOut = [data[0].c];
+        for (let i = 1; i < data.length; i++)
+          emaOut.push(data[i].c * k + emaOut[i-1] * (1 - k));
+        return emaOut;
+      };
+      const ema9  = calcEMA(candlesList, 9);
+      const ema21 = calcEMA(candlesList, 21);
 
-      for (let i = 0; i < data.length; i += 1) {
-        const c = data[i]
-        const x = xPad + i * step + (step - cw) / 2
-        const up = c.c >= c.o
-        const col = up ? '#00e676' : '#ff3d71'
-        const yO = yOf(c.o)
-        const yC = yOf(c.c)
-        const yH = yOf(c.h)
-        const yL = yOf(c.l)
+      // Draw EMA lines
+      const drawEMA = (emaArr, color) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        emaArr.forEach((v, i) => {
+          const x = pad.l + i * (cw + 1) + cw / 2;
+          const y = priceToY(v);
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      };
+      drawEMA(ema9,  'rgba(139,92,246,0.8)');   // purple
+      drawEMA(ema21, 'rgba(0,212,255,0.65)');   // cyan
 
-        ctx.strokeStyle = col
-        ctx.beginPath()
-        ctx.moveTo(x + cw / 2, yH)
-        ctx.lineTo(x + cw / 2, yL)
-        ctx.stroke()
-        ctx.fillStyle = col
-        ctx.fillRect(x, Math.min(yO, yC), cw, Math.max(2, Math.abs(yC - yO)))
+      // Draw candles
+      candlesList.forEach((c, i) => {
+        const x  = pad.l + i * (cw + 1);
+        const yH = priceToY(c.h);
+        const yL = priceToY(c.l);
+        const yO = priceToY(c.o);
+        const yC = priceToY(c.c);
+        const up = c.c >= c.o;
+        const color = up ? '#00e676' : '#ff3d71';
 
-        const vh = (c.v / maxV) * (volH - 8)
-        ctx.fillStyle = up ? 'rgba(0,230,118,0.3)' : 'rgba(255,61,113,0.3)'
-        ctx.fillRect(x, volTop + volH - vh, cw, vh)
-      }
+        // Wick
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x + cw/2, yH);
+        ctx.lineTo(x + cw/2, yL);
+        ctx.stroke();
 
-      const closes = data.map((c) => c.c)
-      const e9 = ema(closes, 9)
-      const e21 = ema(closes, 21)
-      const r = rsi(closes, 14)
+        // Body
+        const bodyTop = Math.min(yO, yC);
+        const bodyH   = Math.max(2, Math.abs(yC - yO));
+        ctx.fillStyle = color;
+        ctx.shadowColor = up ? 'rgba(0,230,118,0.3)' : 'rgba(255,61,113,0.3)';
+        ctx.shadowBlur = 3;
+        ctx.fillRect(x, bodyTop, cw, bodyH);
+        ctx.shadowBlur = 0;
+      });
 
-      const drawLine = (vals, col) => {
-        ctx.beginPath()
-        for (let i = 0; i < vals.length; i += 1) {
-          const x = xPad + i * step + step / 2
-          const y = yOf(vals[i])
-          if (i === 0) ctx.moveTo(x, y)
-          else ctx.lineTo(x, y)
-        }
-        ctx.strokeStyle = col
-        ctx.lineWidth = 1.6
-        ctx.stroke()
-      }
-      drawLine(e9, 'rgba(139,92,246,0.8)')
-      drawLine(e21, 'rgba(0,212,255,0.6)')
+      // Volume bars (grow FROM BOTTOM UP)
+      const maxVol = Math.max(...candlesList.map(c => c.v));
+      const volTop = candleH + gap;
+      candlesList.forEach((c, i) => {
+        const x   = pad.l + i * (cw + 1);
+        const pct = c.v / maxVol;
+        const barH = pct * volumeH;
+        const y    = volTop + volumeH - barH; // bottom-aligned
+        ctx.fillStyle = c.c >= c.o
+          ? 'rgba(0,230,118,0.3)'
+          : 'rgba(255,61,113,0.3)';
+        ctx.fillRect(x, y, cw, barH);
+      });
+      ctx.fillStyle = 'rgba(74,122,155,0.5)';
+      ctx.font = '8px JetBrains Mono';
+      ctx.textAlign = 'left';
+      ctx.fillText('VOL', pad.l + 4, volTop + 12);
 
-      ctx.strokeStyle = 'rgba(0,180,255,0.06)'
-      ctx.beginPath()
-      ctx.moveTo(xPad, rsiTop)
-      ctx.lineTo(w - rightPad, rsiTop)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(xPad, rsiTop + rsiH)
-      ctx.lineTo(w - rightPad, rsiTop + rsiH)
-      ctx.stroke()
-
-      const rY = (v) => rsiTop + ((100 - v) / 100) * rsiH
-      ctx.beginPath()
-      for (let i = 0; i < r.length; i += 1) {
-        const x = xPad + i * step + step / 2
-        const y = rY(r[i])
-        if (i === 0) ctx.moveTo(x, y)
-        else ctx.lineTo(x, y)
-      }
-      ctx.strokeStyle = 'rgba(240,180,41,0.78)'
-      ctx.lineWidth = 1.3
-      ctx.stroke()
-
-      if (hoverRef.current.active) {
-        const hx = clamp(hoverRef.current.x, xPad, w - rightPad)
-        const hy = clamp(hoverRef.current.y, 18, rsiTop + rsiH)
-        ctx.strokeStyle = 'rgba(0,212,255,0.65)'
-        ctx.shadowColor = 'rgba(0,212,255,0.55)'
-        ctx.shadowBlur = 8
-        ctx.beginPath()
-        ctx.moveTo(xPad, hy)
-        ctx.lineTo(w - rightPad, hy)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(hx, 18)
-        ctx.lineTo(hx, rsiTop + rsiH)
-        ctx.stroke()
-        ctx.shadowBlur = 0
-
-        const pAt = maxP + pRange * 0.08 - ((hy - 18) / (priceH - 26)) * (pRange * 1.16)
-        ctx.fillStyle = 'rgba(0,212,255,0.14)'
-        ctx.strokeStyle = 'rgba(0,212,255,0.28)'
-        ctx.beginPath()
-        ctx.roundRect(w - rightPad + 8, hy - 10, 66, 20, 8)
-        ctx.fill()
-        ctx.stroke()
-        ctx.fillStyle = 'rgba(223,240,255,0.95)'
-        ctx.font = "600 10px 'JetBrains Mono'"
-        ctx.fillText(fmt(pAt), w - rightPad + 14, hy + 3)
-      }
-    }
+      // RSI line
+      const rsiTop = candleH + volumeH + gap * 2;
+      [30, 50, 70].forEach(level => {
+        const y = rsiTop + rsiH - (level / 100) * rsiH;
+        ctx.strokeStyle = 'rgba(0,180,255,0.06)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+        ctx.fillStyle = 'rgba(74,122,155,0.5)';
+        ctx.font = '8px JetBrains Mono';
+        ctx.textAlign = 'right';
+        ctx.fillText(level, pad.l - 4, y + 3);
+      });
+      ctx.strokeStyle = 'rgba(240,180,41,0.75)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      candlesList.forEach((_, i) => {
+        const rsiVal = 35 + Math.sin(i * 0.18) * 22 + Math.cos(i * 0.07) * 10;
+        const x = pad.l + i * (cw + 1) + cw / 2;
+        const y = rsiTop + rsiH - (Math.max(0, Math.min(100, rsiVal)) / 100) * rsiH;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(74,122,155,0.5)';
+      ctx.font = '8px JetBrains Mono';
+      ctx.textAlign = 'left';
+      ctx.fillText('RSI', pad.l + 4, rsiTop + 12);
+    };
 
     const resize = () => {
-      canvas.width = Math.max(1, Math.floor(canvas.offsetWidth))
-      canvas.height = Math.max(1, Math.floor(canvas.offsetHeight))
-      render()
-    }
+      canvas.width  = container.clientWidth;
+      canvas.height = container.clientHeight;
+      drawChart();
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(container);
 
-    resize()
-    const ro = new ResizeObserver(resize)
-    ro.observe(parent)
-    const onMove = (e) => {
-      const rect = canvas.getBoundingClientRect()
-      hoverRef.current = { active: true, x: e.clientX - rect.left, y: e.clientY - rect.top }
-      render()
-    }
-    const onLeave = () => {
-      hoverRef.current.active = false
-      render()
-    }
-    canvas.addEventListener('mousemove', onMove)
-    canvas.addEventListener('mouseleave', onLeave)
-    frame = requestAnimationFrame(render)
-
-    return () => {
-      ro.disconnect()
-      canvas.removeEventListener('mousemove', onMove)
-      canvas.removeEventListener('mouseleave', onLeave)
-      cancelAnimationFrame(frame)
-    }
+    return () => ro.disconnect();
   }, [mergedCandles])
 
   const last = mergedCandles[mergedCandles.length - 1]

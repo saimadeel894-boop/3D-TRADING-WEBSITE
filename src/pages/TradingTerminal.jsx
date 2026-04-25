@@ -5,6 +5,7 @@ import PairSidebar from '../components/PairSidebar.jsx'
 import CandlestickChart from '../components/CandlestickChart.jsx'
 import OrderPanel from '../components/OrderPanel.jsx'
 import BottomBar from '../components/BottomBar.jsx'
+import GlowingArc from '../components/GlowingArc.jsx'
 import { useBinancePrice } from '../hooks/useBinancePrice.js'
 import { useBinanceCandles } from '../hooks/useBinanceCandles.js'
 import { useBinanceOrderBook } from '../hooks/useBinanceOrderBook.js'
@@ -69,25 +70,31 @@ export default function TradingTerminal() {
   )
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, minHeight: '100%' }}>
+    <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <ThreeBackground />
+      <GlowingArc className="pointer-events-none fixed inset-x-0 top-[68px] z-0 h-[220px] w-full opacity-65" />
       <TopNav ticker={topTicker} connectionStatus={connection} balance={sim.balance} />
 
-      <div className="pagePad" style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        <div className="mobilePairHeader glass mono">
+      <div className="pagePad" style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, paddingTop: 12 }}>
+        <div className="glass" data-reveal style={{ borderRadius: 16, marginBottom: 10, padding: '10px 12px', flexShrink: 0 }}>
+          <div data-scramble style={{ fontSize: 16, fontWeight: 900, letterSpacing: '-0.02em' }}>
+            TERMINAL COMMAND DECK
+          </div>
+        </div>
+        <div className="mobilePairHeader glass mono" style={{ flexShrink: 0 }}>
           <span>{pairLabel(activePair)}</span>
           <span style={{ color: ticker?.change >= 0 ? 'var(--green)' : 'var(--red)' }}>
             ${markPrice ? markPrice.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
           </span>
         </div>
-        <div className="terminalGrid" style={{ minHeight: 0 }}>
+        <div className="terminalGrid" style={{ flex: 1, minHeight: 0, marginBottom: 12 }} data-reveal>
           <PairSidebar
             pairs={PAIRS}
             tickers={tickers}
             selected={activePair}
             onSelect={setActivePair}
           />
-          <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <CandlestickChart
               pair={pairLabel(activePair)}
               interval={activeInterval}
@@ -111,7 +118,9 @@ export default function TradingTerminal() {
             closePosition={sim.closePosition}
           />
         </div>
-        <BottomBar positions={sim.positions} trades={sim.tradeHistory} alerts={alerts} onClose={sim.closePosition} />
+        <div data-reveal style={{ flexShrink: 0 }}>
+          <BottomBar positions={sim.positions} trades={sim.tradeHistory} alerts={alerts} onClose={sim.closePosition} />
+        </div>
       </div>
     </div>
   )

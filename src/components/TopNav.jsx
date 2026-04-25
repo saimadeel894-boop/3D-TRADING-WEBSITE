@@ -1,17 +1,16 @@
 import { memo, useMemo } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react'
+import { Wallet, User } from 'lucide-react'
 
 function HexLogo() {
   return (
     <div
       style={{
-        width: 36,
-        height: 36,
+        width: 24,
+        height: 24,
         background: 'linear-gradient(135deg, rgba(0,212,255,0.95), rgba(139,92,246,0.85))',
         clipPath: 'polygon(25% 6%, 75% 6%, 96% 50%, 75% 94%, 25% 94%, 4% 50%)',
-        boxShadow: '0 0 26px rgba(0,212,255,0.22), 0 0 46px rgba(139,92,246,0.14)',
-        border: '1px solid rgba(0,212,255,0.22)',
+        boxShadow: '0 0 16px rgba(0,212,255,0.22)',
       }}
     />
   )
@@ -28,137 +27,156 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
 
   const tabs = useMemo(
     () => [
-      { to: '/', label: 'Terminal' },
-      { to: '/p2p', label: 'P2P Market' },
-      { to: '/admin', label: 'Admin Suite' },
-      { to: '/', label: 'Portfolio' },
+      { to: '/', label: 'TERMINAL' },
+      { to: '/p2p', label: 'P2P MARKET' },
+      { to: '/admin', label: 'ADMIN SUITE' },
+      { to: '/portfolio', label: 'PORTFOLIO' },
     ],
     [],
   )
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, padding: '8px 16px 6px' }}>
-      <div
-        className="glass"
-        style={{
-          borderRadius: 18,
-          padding: '6px 12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 10,
-          minHeight: 52,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 220, whiteSpace: 'nowrap' }}>
-          <HexLogo />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
-            <div style={{ fontWeight: 900, letterSpacing: '-0.03em', fontSize: 16 }}>
-              VERTEX<span style={{ color: 'var(--cyan)' }}>PRO</span>
-            </div>
-            <span className="pill mono" style={{ color: 'var(--gold)', padding: '4px 8px' }}>
-              ELITE
-            </span>
-          </div>
+    <div
+      style={{
+        height: '52px',
+        background: 'rgba(4,10,20,0.97)',
+        borderBottom: '1px solid rgba(0,180,255,0.1)',
+        backdropFilter: 'blur(20px)',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 14px',
+        gap: '16px',
+        flexShrink: 0,
+        zIndex: 10,
+      }}
+    >
+      {/* Logo Section */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
+        <HexLogo />
+        <div style={{ fontWeight: 900, letterSpacing: '-0.03em', fontSize: 14 }}>
+          VERTEX<span style={{ color: 'var(--cyan)' }}>PRO</span>
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
-          {tabs.map((t) => (
-            <NavLink
-              key={t.label}
-              to={t.to}
-              className="mono"
-              style={({ isActive }) => ({
-                textDecoration: 'none',
-                padding: '9px 12px',
-                borderRadius: 999,
-                border: `1px solid ${isActive ? 'rgba(0,212,255,0.28)' : 'rgba(0,180,255,0.08)'}`,
-                background: isActive ? 'rgba(0,212,255,0.07)' : 'rgba(255,255,255,0.015)',
-                color: isActive ? 'var(--text)' : 'var(--muted)',
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                fontSize: 11,
-                cursor: 'none',
-              })}
-            >
-              {t.label}
-            </NavLink>
-          ))}
+        <div
+          style={{
+            background: 'rgba(240,180,41,0.1)',
+            color: 'var(--gold)',
+            fontSize: 9,
+            fontWeight: 800,
+            padding: '2px 6px',
+            borderRadius: 4,
+            border: '1px solid rgba(240,180,41,0.2)',
+          }}
+        >
+          ELITE
         </div>
+      </div>
 
-        <div style={{ flex: 1, maxWidth: 420, overflow: 'hidden' }}>
-          <div
+      {/* Nav Tabs */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        {tabs.map((t) => (
+          <NavLink
+            key={t.label}
+            to={t.to}
             className="mono"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-start',
-              gap: 24,
-              padding: '8px 10px',
-              borderRadius: 999,
-              border: '1px solid rgba(0,180,255,0.08)',
-              background: 'rgba(255,255,255,0.015)',
-              overflow: 'hidden',
-              cursor: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {items.slice(0, 4).map((it, idx) => {
-              const up = it.change >= 0
-              return (
-                <div
-                  key={it.symbol}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-end',
-                    gap: 2,
-                    minWidth: 110,
-                    flexShrink: 0,
-                    borderRight: idx < 3 ? '1px solid rgba(0,180,255,0.15)' : 'none',
-                    paddingRight: idx < 3 ? 16 : 0,
-                  }}
-                >
-                  <div style={{ fontWeight: 800, color: 'var(--text)' }}>{it.symbol}</div>
-                  <div style={{ color: 'rgba(223,240,255,0.82)' }}>${fmt(it.price)}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: up ? 'var(--green)' : 'var(--red)' }}>
-                    {up ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}
-                    {up ? '+' : ''}
-                    {it.change.toFixed(2)}%
-                  </div>
-                </div>
-              )
+            style={({ isActive }) => ({
+              textDecoration: 'none',
+              padding: '6px 10px',
+              borderRadius: 6,
+              background: isActive ? 'rgba(0,212,255,0.08)' : 'transparent',
+              color: isActive ? 'var(--text)' : 'var(--muted)',
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: '0.05em',
             })}
-          </div>
-        </div>
+          >
+            {t.label}
+          </NavLink>
+        ))}
+      </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
-          <button type="button" className="btn mono" onClick={() => {}} style={{ cursor: 'none', borderRadius: 999 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <Wallet size={16} /> DEPOSIT
-            </span>
-          </button>
-          <button type="button" className="btn btnPrimary mono argusGlow" onClick={() => nav('/')} style={{ cursor: 'none', borderRadius: 999 }}>
-            TRADE NOW
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="pill mono" style={{ color: 'rgba(223,240,255,0.86)' }}>
-              BAL ${fmt(balance, 0)}
-            </div>
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* Ticker Strip */}
+      <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+        {items.slice(0, 4).map((it, idx) => {
+          const up = it.change >= 0
+          return (
             <div
-              title={`Connection: ${connectionStatus}`}
-              className="healthDot"
+              key={it.symbol}
               style={{
-                '--dotColor':
-                  connectionStatus === 'connected'
-                    ? 'rgba(0,230,118,0.95)'
-                    : connectionStatus === 'disconnected'
-                      ? 'rgba(255,61,113,0.95)'
-                      : 'rgba(240,180,41,0.95)',
+                minWidth: 115,
+                padding: '0 12px',
+                borderRight: idx < 3 ? '1px solid rgba(0,180,255,0.12)' : 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
               }}
-            />
-          </div>
+            >
+              <div style={{ fontSize: 9, color: '#4a7a9b', fontFamily: 'JetBrains Mono', letterSpacing: '0.08em' }}>
+                {it.symbol}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono', color: up ? '#00e676' : '#ff3d71' }}>
+                ${fmt(it.price)}
+              </div>
+              <div style={{ fontSize: 9, color: up ? '#00e676' : '#ff3d71' }}>
+                {up ? '▲' : '▼'} {up ? '+' : ''}{it.change.toFixed(2)}%
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Right Side */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderLeft: '1px solid rgba(0,180,255,0.1)', paddingLeft: 16 }}>
+        <button
+          style={{
+            border: '1px solid rgba(0,212,255,0.4)',
+            background: 'transparent',
+            color: 'var(--text)',
+            padding: '6px 12px',
+            borderRadius: 6,
+            fontSize: 10,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            cursor: 'none',
+          }}
+        >
+          <Wallet size={12} /> DEPOSIT
+        </button>
+        <button
+          onClick={() => nav('/')}
+          style={{
+            background: 'var(--cyan)',
+            color: '#000',
+            border: 'none',
+            padding: '6px 16px',
+            borderRadius: 6,
+            fontSize: 10,
+            fontWeight: 800,
+            cursor: 'none',
+          }}
+        >
+          TRADE NOW
+        </button>
+        <div style={{ fontSize: 11, fontFamily: 'JetBrains Mono', fontWeight: 600, color: 'var(--text)' }}>
+          BAL ${fmt(balance, 0)}
+        </div>
+        <div
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            background: 'rgba(139,92,246,0.2)',
+            border: '1px solid rgba(139,92,246,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <User size={14} color="var(--purple)" />
         </div>
       </div>
     </div>
@@ -166,4 +184,5 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
 }
 
 export default memo(TopNav)
+
 

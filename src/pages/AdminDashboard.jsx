@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import ThreeBackground from '../components/ThreeBackground.jsx'
 import TopNav from '../components/TopNav.jsx'
 import { useMultiTicker } from '../hooks/useMultiTicker.js'
+import GlowingArc from '../components/GlowingArc.jsx'
 
 function Bar({ v, col }) {
   return (
@@ -121,13 +122,14 @@ export default function AdminDashboard() {
   return (
     <div style={{ position: 'relative', zIndex: 1, minHeight: '100%' }}>
       <ThreeBackground />
+      <GlowingArc className="pointer-events-none fixed inset-x-0 top-[68px] z-0 h-[220px] w-full opacity-65" />
       <TopNav ticker={ticker} />
 
       <div className="pagePad" style={{ position: 'relative', zIndex: 10 }}>
-        <div className="glass" style={{ borderRadius: 18, padding: 16 }}>
+        <div className="glass" style={{ borderRadius: 18, padding: 16 }} data-reveal>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <div>
-              <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em' }}>ADMIN COMMAND CENTER</div>
+              <div data-scramble style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em' }}>ADMIN COMMAND CENTER</div>
               <div className="mono" style={{ marginTop: 6, color: '#94A3B8', fontSize: 9 }}>
                 Threat-aware monitoring • Risk controls • Endpoint surface
               </div>
@@ -162,7 +164,7 @@ export default function AdminDashboard() {
             ))}
           </div>
 
-          <div className="split_16_10" style={{ marginTop: 12 }}>
+          <div className="split_16_10" style={{ marginTop: 12 }} data-reveal>
             <div className="glass" style={{ borderRadius: 18, padding: 14 }}>
               <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
                 User Sessions
@@ -238,7 +240,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="split_14_10" style={{ marginTop: 12 }}>
+          <div className="split_14_10" style={{ marginTop: 12 }} data-reveal>
             <div className="glass" style={{ borderRadius: 18, padding: 14 }}>
               <div className="mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>
                 API Endpoints
