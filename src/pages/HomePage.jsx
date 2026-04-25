@@ -1,10 +1,22 @@
 import { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 
 gsap.registerPlugin(ScrollTrigger);
+
+// ── Framer Motion variants (spring physics) ───
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.13, delayChildren: 0.05 } }
+};
+const springItem = {
+  hidden: { y: 60, opacity: 0, filter: 'blur(8px)' },
+  visible: { y: 0, opacity: 1, filter: 'blur(0px)',
+    transition: { type: 'spring', stiffness: 100, damping: 20 } }
+};
 
 // ── Count-up helper ───────────────────────────
 function countUp(el, target, suffix = '', duration = 1800) {
@@ -35,6 +47,8 @@ export default function HomePage() {
   const spotlightRef = useRef(null);
   const ptsRef       = useRef(null);
   const scrollYRef   = useRef(0);
+  const mousePosRef  = useRef({ x: 0, y: 0 });
+  const gridMeshRef  = useRef(null);
 
   // ── Lenis smooth scroll (enhanced inertia) ───
   useEffect(() => {
@@ -55,13 +69,14 @@ export default function HomePage() {
     return () => { lenisRef.current?.destroy(); gsap.ticker.remove(); };
   }, []);
 
-  // ── Spotlight cursor effect ───────────────────
+  // ── Spotlight + mouse tracking ───────────────
   useEffect(() => {
     const el = spotlightRef.current;
     if (!el) return;
     const onMove = (e) => {
       el.style.left = e.clientX + 'px';
       el.style.top  = e.clientY + 'px';
+      mousePosRef.current = { x: e.clientX, y: e.clientY };
     };
     window.addEventListener('mousemove', onMove);
     return () => window.removeEventListener('mousemove', onMove);
@@ -132,6 +147,17 @@ export default function HomePage() {
     );
     scene.add(arc2);
 
+    // ── Interactive 3D grid plane ─────────────
+    const gridGeo = new THREE.PlaneGeometry(28, 28, 28, 28);
+    const gridMat = new THREE.MeshBasicMaterial({
+      color: 0x00f2ff, wireframe: true, transparent: true, opacity: 0.055
+    });
+    const gridMesh = new THREE.Mesh(gridGeo, gridMat);
+    gridMesh.rotation.x = -Math.PI / 2;
+    gridMesh.position.y = -3.5;
+    scene.add(gridMesh);
+    gridMeshRef.current = gridMesh;
+
     ptsRef.current = pts;
     let t = 0, rafId;
     const animate = () => {
@@ -142,6 +168,14 @@ export default function HomePage() {
       pts.rotation.y = t * 0.05 + scrollFrac * 0.6;
       pts.rotation.x = t * 0.02 + scrollFrac * 0.3;
       pts.position.y = -scrollFrac * 1.2;
+      // Interactive grid — mouse tilt + scroll depth
+      if (gridMeshRef.current) {
+        const mx = (mousePosRef.current.x / innerWidth  - 0.5);
+        const my = (mousePosRef.current.y / innerHeight - 0.5);
+        gridMeshRef.current.rotation.x = -Math.PI / 2 + my * 0.12;
+        gridMeshRef.current.rotation.z = mx * 0.08;
+        gridMeshRef.current.position.z = -scrollFrac * 1.8;
+      }
       // Pulse arc opacity
       arcMat.opacity = 0.4 + Math.sin(t * 1.5) * 0.2;
       renderer.render(scene, camera);
@@ -187,36 +221,36 @@ export default function HomePage() {
         );
       });
 
-      // Flying logo — shrinks from hero into navbar on scroll
+      // Flying logo — moves from center-page to navbar-left as user scrolls
       ScrollTrigger.create({
         trigger: containerRef.current,
         start: 'top top',
-        end: '+=300',
-        scrub: true,
+        end: '+=420',
+        scrub: 1.4,
         onUpdate: (self) => {
           const p = self.progress;
+          // Quad ease for natural feel
+          const e = p < 0.5 ? 2*p*p : -1+(4-2*p)*p;
           if (logoRef.current) {
+            const tx = -innerWidth  * 0.40 * e;
+            const ty = -innerHeight * 0.44 * e;
             gsap.set(logoRef.current, {
-              scale: 1 - p * 0.55,
-              opacity: 1 - p * 0.6
+              x: tx, y: ty,
+              scale: 1 - e * 0.62,
+              opacity: 1 - e * 0.85
             });
           }
           if (navLogoRef.current) {
-            gsap.set(navLogoRef.current, { opacity: p });
+            gsap.set(navLogoRef.current, { opacity: Math.min(1, p * 2.2) });
           }
         }
       });
 
-      // Feature cards stagger in
-      gsap.from('.feature-card', {
-        scrollTrigger: {
-          trigger: '.features-section',
-          start: 'top 80%'
-        },
-        y: 80, opacity: 0,
-        duration: 0.9,
-        stagger: 0.15,
-        ease: 'power3.out'
+      // CTA character mask reveal
+      gsap.from('.cta-mask-inner', {
+        scrollTrigger: { trigger: '.cta-mask-inner', start: 'top 88%' },
+        yPercent: 105, opacity: 0,
+        duration: 1.1, ease: 'expo.out'
       });
 
       // Stats heartbeat
@@ -595,11 +629,13 @@ export default function HomePage() {
           BUILT FOR THE ELITE
         </h2>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 24
-        }}>
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}
+        >
           {[
             {
               icon: '📊',
@@ -644,8 +680,9 @@ export default function HomePage() {
               link: '/admin'
             },
           ].map((card) => (
-            <div
+            <motion.div
               key={card.title}
+              variants={springItem}
               className="feature-card"
               onClick={() => navigate(card.link)}
               style={{
@@ -654,23 +691,21 @@ export default function HomePage() {
                 borderRadius: 10,
                 padding: '28px 24px',
                 backdropFilter: 'blur(16px)',
-                transition: 'all 0.3s',
+                transition: 'border-color 0.3s, box-shadow 0.3s, background 0.3s',
                 position: 'relative',
                 overflow: 'hidden'
               }}
+              whileHover={{ y: -6, scale: 1.01, transition: { type: 'spring', stiffness: 100, damping: 20 } }}
               onMouseEnter={e => {
                 e.currentTarget.style.borderColor = card.color + '55';
-                e.currentTarget.style.transform = 'translateY(-6px) rotateX(2deg)';
                 e.currentTarget.style.boxShadow = `0 20px 40px ${card.color}22`;
                 e.currentTarget.style.background = `rgba(10,22,40,0.9)`;
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.borderColor = card.color + '22';
-                e.currentTarget.style.transform = 'translateY(0) rotateX(0)';
                 e.currentTarget.style.boxShadow = 'none';
                 e.currentTarget.style.background = 'rgba(10,22,40,0.7)';
               }}>
-              {/* Top color bar */}
               <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0,
                 height: 2,
@@ -689,9 +724,9 @@ export default function HomePage() {
                 color: 'rgba(223,240,255,0.55)',
                 lineHeight: 1.7, margin: 0
               }}>{card.desc}</p>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* ── FINAL CTA SECTION ── */}
@@ -700,20 +735,23 @@ export default function HomePage() {
         textAlign: 'center',
         padding: '100px 40px 140px'
       }}>
-        <h2 style={{
-          fontFamily: "'Syne', sans-serif",
-          fontSize: 'clamp(32px, 5vw, 64px)',
-          fontWeight: 800,
-          letterSpacing: 'calc(0.1em + 2px)',
-          marginBottom: 20,
-          background: 'linear-gradient(125deg,#e8f4ff 0%,#ffffff 20%,#00f2ff 50%,#8b5cf6 80%,#c4b5fd 100%)',
-          backgroundSize: '200% auto',
-          animation: 'metalShimmer 4s linear infinite',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>
-          READY TO TRADE?
-        </h2>
+        {/* Character mask reveal — slides up through overflow:hidden */}
+        <div style={{ overflow: 'hidden', display: 'inline-block', marginBottom: 20 }}>
+          <h2 className="cta-mask-inner" style={{
+            fontFamily: "'Syne', sans-serif",
+            fontSize: 'clamp(32px, 5vw, 64px)',
+            fontWeight: 800,
+            letterSpacing: 'calc(0.1em + 2px)',
+            margin: 0,
+            background: 'linear-gradient(125deg,#e8f4ff 0%,#ffffff 20%,#00f2ff 50%,#8b5cf6 80%,#c4b5fd 100%)',
+            backgroundSize: '200% auto',
+            animation: 'metalShimmer 4s linear infinite',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            READY TO TRADE?
+          </h2>
+        </div>
         <p style={{
           fontFamily: "'Rajdhani', sans-serif",
           fontSize: 16,
