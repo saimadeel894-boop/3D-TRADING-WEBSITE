@@ -97,6 +97,22 @@ export default function CandlestickChart({
     return data
   }, [candles, livePrice])
 
+  const chartMeta = useMemo(() => {
+    if (!mergedCandles.length) return null
+    const minP = Math.min(...mergedCandles.map((c) => c.l))
+    const maxP = Math.max(...mergedCandles.map((c) => c.h))
+    const maxV = Math.max(...mergedCandles.map((c) => c.v))
+    const closes = mergedCandles.map((c) => c.c)
+    return {
+      minP,
+      maxP,
+      maxV,
+      e9: ema(closes, 9),
+      e21: ema(closes, 21),
+      r: rsi(closes, 14),
+    }
+  }, [mergedCandles])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -127,10 +143,10 @@ export default function CandlestickChart({
       const chartW = w - xPad - rightPad
 
       const data = mergedCandles
-      if (!data.length) return
+      const meta = chartMeta
+      if (!data.length || !meta) return
 
-      const minP = Math.min(...data.map((c) => c.l))
-      const maxP = Math.max(...data.map((c) => c.h))
+      const { minP, maxP, maxV, e9, e21, r } = meta
       const pRange = Math.max(1e-9, maxP - minP)
       const yOf = (p) => 18 + ((maxP + pRange * 0.08 - p) / (pRange * 1.16)) * (priceH - 26)
 
@@ -146,7 +162,6 @@ export default function CandlestickChart({
 
       const step = chartW / data.length
       const cw = clamp(step * 0.62, 4, 9)
-      const maxV = Math.max(...data.map((c) => c.v))
 
       for (let i = 0; i < data.length; i += 1) {
         const c = data[i]
@@ -205,11 +220,6 @@ export default function CandlestickChart({
         ctx.fill()
       }
 
-      const closes = data.map((c) => c.c)
-      const e9 = ema(closes, 9)
-      const e21 = ema(closes, 21)
-      const r = rsi(closes, 14)
-
       const drawLine = (vals, col) => {
         ctx.beginPath()
         for (let i = 0; i < vals.length; i += 1) {
@@ -251,7 +261,6 @@ export default function CandlestickChart({
     const resize = () => {
       canvas.width = Math.max(1, Math.floor(canvas.offsetWidth))
       canvas.height = Math.max(1, Math.floor(canvas.offsetHeight))
-      render()
     }
 
     resize()
