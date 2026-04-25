@@ -14,24 +14,33 @@ function CustomCursor() {
     const ring = ringRef.current;
     if (!dot || !ring) return;
 
-    let rx = 0, ry = 0, mx = 0, my = 0, rafId;
+    let rx = 0, ry = 0, mx = 0, my = 0, currentScale = 1, isPointer = false, rafId;
 
     const onMove = (e) => {
       mx = e.clientX;
       my = e.clientY;
-      dot.style.left = mx + 'px';
-      dot.style.top  = my + 'px';
+      const target = e.target;
+      isPointer = window.getComputedStyle(target).cursor === 'pointer' || 
+                  ['BUTTON', 'A', 'INPUT', 'SELECT'].includes(target.tagName);
     };
 
     const follow = () => {
       rx += (mx - rx) * 0.15;
       ry += (my - ry) * 0.15;
+      
+      const targetScale = isPointer ? 1.5 : 1;
+      currentScale += (targetScale - currentScale) * 0.2;
+      ring.style.transform = `translate(-50%,-50%) scale(${currentScale})`;
+      ring.style.borderColor = isPointer ? 'rgba(0,212,255,0.8)' : 'rgba(0,212,255,0.35)';
+      
       ring.style.left = rx + 'px';
       ring.style.top  = ry + 'px';
+      dot.style.left = mx + 'px';
+      dot.style.top  = my + 'px';
       rafId = requestAnimationFrame(follow);
     };
 
-    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mousemove', onMove, { passive: true });
     follow();
 
     return () => {

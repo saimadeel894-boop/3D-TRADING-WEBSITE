@@ -32,6 +32,7 @@ export function useMultiTicker() {
   const wsRef = useRef(null)
   const retryRef = useRef({ attempt: 0, timer: 0 })
   const aliveRef = useRef(true)
+  const lastUpdateRef = useRef(0)
 
   useEffect(() => {
     aliveRef.current = true
@@ -78,6 +79,10 @@ export function useMultiTicker() {
         const c = Number.parseFloat(d.c)
         const o = Number.parseFloat(d.o)
         const change = o ? ((c - o) / o) * 100 : 0
+
+        const now = Date.now();
+        if (now - lastUpdateRef.current < 100) return;
+        lastUpdateRef.current = now;
 
         setTickers((prev) => ({
           ...prev,

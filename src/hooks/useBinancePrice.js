@@ -20,6 +20,7 @@ export function useBinancePrice(symbol = 'btcusdt') {
   const wsRef = useRef(null)
   const retryRef = useRef({ attempt: 0, timer: 0 })
   const aliveRef = useRef(true)
+  const lastUpdateRef = useRef(0)
 
   useEffect(() => {
     aliveRef.current = true
@@ -60,6 +61,11 @@ export function useBinancePrice(symbol = 'btcusdt') {
       ws.onmessage = (e) => {
         const d = safeJsonParse(e.data)
         if (!d || !aliveRef.current) return
+
+        const now = Date.now();
+        if (now - lastUpdateRef.current < 100) return;
+        lastUpdateRef.current = now;
+
         setData({
           price: Number.parseFloat(d.c),
           change: Number.parseFloat(d.P),

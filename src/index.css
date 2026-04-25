@@ -1,5 +1,5 @@
-*, *::before, *::after {
-  cursor: none !important;
+html, body {
+  cursor: none;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@500;600;700;800&display=swap');
