@@ -150,6 +150,40 @@ export default function CandlestickChart({
         ctx.fillRect(x, volTop + volH - vh, cw, vh)
       }
 
+      // ── Current Price Tracker Line ──
+      const currentCandle = data[data.length - 1]
+      if (currentCandle) {
+        const lastY = yOf(currentCandle.c)
+        const lastX = xPad + (data.length - 1) * step + step / 2
+        const isUp = currentCandle.c >= currentCandle.o
+        const trackerCol = isUp ? 'rgba(0,230,118,0.8)' : 'rgba(255,61,113,0.8)'
+        const glowCol = isUp ? '0,230,118' : '255,61,113'
+
+        // Horizontal dashed line
+        ctx.beginPath()
+        ctx.setLineDash([4, 4])
+        ctx.moveTo(xPad, lastY)
+        ctx.lineTo(w, lastY)
+        ctx.strokeStyle = trackerCol
+        ctx.lineWidth = 1
+        ctx.stroke()
+        ctx.setLineDash([])
+
+        // Glowing Dot
+        const t = Date.now() / 1000
+        const pulse = (t % 1.5) / 1.5 // 0 to 1
+        
+        ctx.beginPath()
+        ctx.arc(lastX, lastY, 4 + pulse * 12, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(${glowCol}, ${0.5 * (1 - pulse)})`
+        ctx.fill()
+
+        ctx.beginPath()
+        ctx.arc(lastX, lastY, 4, 0, Math.PI * 2)
+        ctx.fillStyle = isUp ? '#00e676' : '#ff3d71'
+        ctx.fill()
+      }
+
       const closes = data.map((c) => c.c)
       const e9 = ema(closes, 9)
       const e21 = ema(closes, 21)
