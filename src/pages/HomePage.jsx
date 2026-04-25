@@ -6,6 +6,20 @@ import * as THREE from 'three';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// ── Count-up helper ───────────────────────────
+function countUp(el, target, suffix = '', duration = 1800) {
+  const start = performance.now();
+  const isFloat = String(target).includes('.');
+  const run = (now) => {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 4);
+    const val = isFloat ? (target * ease).toFixed(1) : Math.floor(target * ease);
+    el.textContent = suffix === '$' ? `$${Number(val).toLocaleString()}M` : val + suffix;
+    if (p < 1) requestAnimationFrame(run);
+  };
+  requestAnimationFrame(run);
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const containerRef = useRef(null);
@@ -18,16 +32,39 @@ export default function HomePage() {
   const word2Ref     = useRef(null);
   const word3Ref     = useRef(null);
   const lenisRef     = useRef(null);
+  const spotlightRef = useRef(null);
+  const ptsRef       = useRef(null);
+  const scrollYRef   = useRef(0);
 
-  // ── Lenis smooth scroll ──────────────────────
+  // ── Lenis smooth scroll (enhanced inertia) ───
   useEffect(() => {
     import('@studio-freight/lenis').then(({ default: Lenis }) => {
-      const lenis = new Lenis({ duration: 1.4, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+      const lenis = new Lenis({
+        duration: 1.8,
+        easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        wheelMultiplier: 0.9,
+        touchMultiplier: 1.6,
+      });
       lenisRef.current = lenis;
-      const raf = (time) => { lenis.raf(time); requestAnimationFrame(raf); };
-      requestAnimationFrame(raf);
+      lenis.on('scroll', ({ scroll }) => { scrollYRef.current = scroll; });
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add((time) => lenis.raf(time * 1000));
+      gsap.ticker.lagSmoothing(0);
     });
-    return () => lenisRef.current?.destroy();
+    return () => { lenisRef.current?.destroy(); gsap.ticker.remove(); };
+  }, []);
+
+  // ── Spotlight cursor effect ───────────────────
+  useEffect(() => {
+    const el = spotlightRef.current;
+    if (!el) return;
+    const onMove = (e) => {
+      el.style.left = e.clientX + 'px';
+      el.style.top  = e.clientY + 'px';
+    };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
   }, []);
 
   // ── Three.js particle background ─────────────
@@ -95,12 +132,16 @@ export default function HomePage() {
     );
     scene.add(arc2);
 
+    ptsRef.current = pts;
     let t = 0, rafId;
     const animate = () => {
       rafId = requestAnimationFrame(animate);
       t += 0.004;
-      pts.rotation.y = t * 0.05;
-      pts.rotation.x = t * 0.02;
+      // Parallax — shift particles based on scroll
+      const scrollFrac = scrollYRef.current * 0.0004;
+      pts.rotation.y = t * 0.05 + scrollFrac * 0.6;
+      pts.rotation.x = t * 0.02 + scrollFrac * 0.3;
+      pts.position.y = -scrollFrac * 1.2;
       // Pulse arc opacity
       arcMat.opacity = 0.4 + Math.sin(t * 1.5) * 0.2;
       renderer.render(scene, camera);
@@ -136,16 +177,14 @@ export default function HomePage() {
         duration: 1.4, ease: 'expo.out', delay: 0.5
       });
 
-      // "Fast. Reliable. Secure." slam in one by one
+      // "Fast. Reliable. Secure." — slam + motion blur
       const words = [word1Ref, word2Ref, word3Ref];
       words.forEach((ref, i) => {
-        gsap.from(ref.current, {
-          y: 60, opacity: 0,
-          filter: 'blur(12px)',
-          duration: 0.7,
-          ease: 'power4.out',
-          delay: 1.0 + i * 0.18
-        });
+        gsap.fromTo(ref.current,
+          { y: 80, opacity: 0, filter: 'blur(22px)', skewX: -8 },
+          { y: 0,  opacity: 1, filter: 'blur(0px)',  skewX: 0,
+            duration: 0.85, ease: 'power4.out', delay: 1.0 + i * 0.2 }
+        );
       });
 
       // Flying logo — shrinks from hero into navbar on scroll
@@ -190,6 +229,22 @@ export default function HomePage() {
         stagger: 0.3
       });
 
+      // Count-up on stats when they enter viewport
+      const statEls = document.querySelectorAll('.stat-countup');
+      statEls.forEach(el => {
+        ScrollTrigger.create({
+          trigger: el,
+          start: 'top 85%',
+          once: true,
+          onEnter: () => {
+            const target = parseFloat(el.dataset.target);
+            const suffix = el.dataset.suffix || '';
+            const type   = el.dataset.type   || '';
+            countUp(el, target, type === 'dollar' ? '$' : suffix, 1600);
+          }
+        });
+      });
+
     }, containerRef);
 
     return () => ctx.revert();
@@ -204,6 +259,19 @@ export default function HomePage() {
       color: '#dff0ff',
       position: 'relative'
     }}>
+
+      {/* Spotlight cursor */}
+      <div ref={spotlightRef} style={{
+        position: 'fixed',
+        width: 420, height: 420,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(0,242,255,0.07) 0%, rgba(0,242,255,0.03) 35%, transparent 70%)',
+        transform: 'translate(-50%,-50%)',
+        pointerEvents: 'none',
+        zIndex: 2,
+        mixBlendMode: 'screen',
+        transition: 'opacity 0.3s'
+      }} />
 
       {/* Three.js canvas background */}
       <canvas ref={canvasRef} style={{
@@ -345,16 +413,24 @@ export default function HomePage() {
             fontFamily: "'Syne', sans-serif",
             fontSize: 'clamp(52px, 8vw, 110px)',
             fontWeight: 800,
-            letterSpacing: '0.2em',
+            letterSpacing: 'calc(0.2em + 2px)',
             margin: 0, lineHeight: 1,
-            background: 'linear-gradient(135deg, #ffffff 0%, #00f2ff 50%, #8b5cf6 100%)',
+            background: 'linear-gradient(125deg, #e8f4ff 0%, #ffffff 18%, #00f2ff 42%, #a0d8ef 58%, #8b5cf6 78%, #c4b5fd 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            textTransform: 'uppercase'
+            backgroundSize: '200% auto',
+            animation: 'metalShimmer 4s linear infinite',
+            textTransform: 'uppercase',
+            textShadow: 'none',
+            filter: 'drop-shadow(0 0 30px rgba(0,242,255,0.15))'
           }}>
             VERTEX<span style={{
-              WebkitTextFillColor: '#00f2ff',
-              textShadow: '0 0 40px rgba(0,242,255,0.4)'
+              WebkitTextFillColor: 'transparent',
+              background: 'linear-gradient(125deg,#00f2ff,#7dd3fc,#00f2ff)',
+              WebkitBackgroundClip: 'text',
+              backgroundSize: '200% auto',
+              animation: 'metalShimmer 3s linear infinite',
+              filter: 'drop-shadow(0 0 24px rgba(0,242,255,0.5))'
             }}>PRO</span>
           </h1>
         </div>
@@ -453,18 +529,24 @@ export default function HomePage() {
           backdropFilter: 'blur(10px)'
         }}>
           {[
-            { label: '24H VOLUME',   value: '$8.42M', color: '#00f2ff' },
-            { label: 'ACTIVE USERS', value: '1,284',  color: '#00e676' },
-            { label: 'PAIRS',        value: '30+',    color: '#f0b429' },
-            { label: 'UPTIME',       value: '99.9%',  color: '#8b5cf6' },
+            { label: '24H VOLUME',   display: '$8.42M', target: 8.42, type: 'dollar', suffix: '',    color: '#00f2ff' },
+            { label: 'ACTIVE USERS', display: '1,284',  target: 1284, type: '',       suffix: '',    color: '#00e676' },
+            { label: 'PAIRS',        display: '30+',    target: 30,   type: '',       suffix: '+',   color: '#f0b429' },
+            { label: 'UPTIME',       display: '99.9%',  target: 99.9, type: '',       suffix: '%',   color: '#8b5cf6' },
           ].map(s => (
             <div key={s.label} style={{ textAlign: 'center' }}>
-              <div className="stat-value" style={{
-                fontFamily: "'Syne', sans-serif",
-                fontSize: 28, fontWeight: 800,
-                color: s.color,
-                textShadow: `0 0 16px ${s.color}66`
-              }}>{s.value}</div>
+              <div
+                className="stat-value stat-countup"
+                data-target={s.target}
+                data-suffix={s.suffix}
+                data-type={s.type}
+                style={{
+                  fontFamily: "'Syne', sans-serif",
+                  fontSize: 28, fontWeight: 800,
+                  color: s.color,
+                  textShadow: `0 0 16px ${s.color}66`,
+                  letterSpacing: 'calc(0.04em + 2px)'
+                }}>{s.display}</div>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 9, color: 'rgba(74,122,155,0.9)',
@@ -503,8 +585,10 @@ export default function HomePage() {
           fontFamily: "'Syne', sans-serif",
           fontSize: 'clamp(28px, 4vw, 48px)',
           fontWeight: 800, textAlign: 'center',
-          letterSpacing: '0.1em', marginBottom: 64,
-          background: 'linear-gradient(135deg,#ffffff,#00f2ff)',
+          letterSpacing: 'calc(0.1em + 2px)', marginBottom: 64,
+          background: 'linear-gradient(125deg,#e8f4ff 0%,#ffffff 20%,#00f2ff 50%,#8b5cf6 80%,#c4b5fd 100%)',
+          backgroundSize: '200% auto',
+          animation: 'metalShimmer 5s linear infinite',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
@@ -620,9 +704,11 @@ export default function HomePage() {
           fontFamily: "'Syne', sans-serif",
           fontSize: 'clamp(32px, 5vw, 64px)',
           fontWeight: 800,
-          letterSpacing: '0.1em',
+          letterSpacing: 'calc(0.1em + 2px)',
           marginBottom: 20,
-          background: 'linear-gradient(135deg,#ffffff,#00f2ff)',
+          background: 'linear-gradient(125deg,#e8f4ff 0%,#ffffff 20%,#00f2ff 50%,#8b5cf6 80%,#c4b5fd 100%)',
+          backgroundSize: '200% auto',
+          animation: 'metalShimmer 4s linear infinite',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
@@ -670,6 +756,10 @@ export default function HomePage() {
         @keyframes bounce {
           0%,100% { transform: translateY(0); }
           50%      { transform: translateY(8px); }
+        }
+        @keyframes metalShimmer {
+          0%   { background-position: 200% center; }
+          100% { background-position: -200% center; }
         }
       `}</style>
     </div>
