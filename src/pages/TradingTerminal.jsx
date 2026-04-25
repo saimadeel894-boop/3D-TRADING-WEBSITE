@@ -94,6 +94,7 @@ export default function TradingTerminal() {
               onInterval={(it) => setActiveInterval(it)}
               intervals={INTERVALS}
               candles={candles}
+              livePrice={markPrice}
               isLoading={candlesLoading}
               status={candlesStatus}
             />

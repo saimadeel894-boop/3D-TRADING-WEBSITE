@@ -65,6 +65,7 @@ function fmt(n, d = 2) {
 export default function CandlestickChart({
   pair = 'BTC/USDT',
   candles = [],
+  livePrice = 0,
   isLoading = false,
   status = 'connecting',
   interval = '1m',
@@ -75,9 +76,26 @@ export default function CandlestickChart({
   const dataRef = useRef(genSeedCandles(80))
 
   const mergedCandles = useMemo(() => {
-    if (Array.isArray(candles) && candles.length >= 20) return candles.slice(-120)
-    return dataRef.current
-  }, [candles])
+    let data = []
+    if (Array.isArray(candles) && candles.length >= 20) {
+      data = candles.slice(-120)
+    } else {
+      data = dataRef.current
+    }
+
+    // Sync last candle with livePrice for "up and down" movement
+    if (livePrice > 0 && data.length > 0) {
+      const last = { ...data[data.length - 1] }
+      last.c = livePrice
+      last.h = Math.max(last.h, livePrice)
+      last.l = Math.min(last.l, livePrice)
+      const updated = [...data]
+      updated[updated.length - 1] = last
+      return updated
+    }
+
+    return data
+  }, [candles, livePrice])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -86,9 +104,12 @@ export default function CandlestickChart({
     if (!parent) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    let frame = 0
+    let rafId
+    let isAlive = true
 
     const render = () => {
+      if (!isAlive) return
+      rafId = requestAnimationFrame(render)
       const w = canvas.width
       const h = canvas.height
       if (!w || !h) return
@@ -236,11 +257,12 @@ export default function CandlestickChart({
     resize()
     const ro = new ResizeObserver(resize)
     ro.observe(parent)
-    frame = requestAnimationFrame(render)
+    render()
 
     return () => {
+      isAlive = false
       ro.disconnect()
-      cancelAnimationFrame(frame)
+      cancelAnimationFrame(rafId)
     }
   }, [mergedCandles])
 
