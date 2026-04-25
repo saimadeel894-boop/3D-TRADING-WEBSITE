@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Route, Routes } from 'react-router-dom'
+import HomePage from './pages/HomePage'
 import TradingTerminal from './pages/TradingTerminal.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import P2PMarketplace from './pages/P2PMarketplace.jsx'
@@ -71,9 +72,11 @@ export default function App() {
     <>
       <CustomCursor />
       <Routes>
-        <Route path="/"      element={<TradingTerminal />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/p2p"   element={<P2PMarketplace />} />
+        <Route path="/"         element={<HomePage />} />
+        <Route path="/home"     element={<HomePage />} />
+        <Route path="/terminal" element={<TradingTerminal />} />
+        <Route path="/admin"    element={<AdminDashboard />} />
+        <Route path="/p2p"      element={<P2PMarketplace />} />
       </Routes>
     </>
   );
