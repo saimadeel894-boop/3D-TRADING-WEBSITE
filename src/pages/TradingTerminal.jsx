@@ -1,128 +1,160 @@
-import { useMemo, useState } from 'react'
-import ThreeBackground from '../components/ThreeBackground.jsx'
-import TopNav from '../components/TopNav.jsx'
-import PairSidebar from '../components/PairSidebar.jsx'
-import CandlestickChart from '../components/CandlestickChart.jsx'
-import OrderPanel from '../components/OrderPanel.jsx'
-import BottomBar from '../components/BottomBar.jsx'
-import GlowingArc from '../components/GlowingArc.jsx'
-import { useBinancePrice } from '../hooks/useBinancePrice.js'
-import { useBinanceCandles } from '../hooks/useBinanceCandles.js'
-import { useBinanceOrderBook } from '../hooks/useBinanceOrderBook.js'
-import { useMultiTicker } from '../hooks/useMultiTicker.js'
-import { useSimulatedOrders } from '../hooks/useSimulatedOrders.js'
-
-const PAIRS = ['btcusdt', 'ethusdt', 'solusdt', 'bnbusdt', 'xrpusdt']
-const INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1D']
-
-function pairLabel(p) {
-  return p.replace('usdt', '/USDT').toUpperCase()
-}
+import { useEffect, useRef, useState } from 'react';
+import TopNav from '../components/TopNav';
+import PairSidebar from '../components/PairSidebar';
+import CandlestickChart from '../components/CandlestickChart';
+import OrderPanel from '../components/OrderPanel';
+import BottomBar from '../components/BottomBar';
+import ThreeBackground from '../components/ThreeBackground';
 
 export default function TradingTerminal() {
-  const [activePair, setActivePair] = useState('btcusdt')
-  const [activeInterval, setActiveInterval] = useState('1m')
-
-  const { tickers, status: multiStatus } = useMultiTicker()
-  const { data: ticker, status: tickerStatus } = useBinancePrice(activePair)
-  const { book, status: bookStatus } = useBinanceOrderBook(activePair)
-  const binanceInterval = activeInterval === '1D' ? '1d' : activeInterval
-  const { candles, status: candlesStatus, isLoading: candlesLoading } = useBinanceCandles(activePair, binanceInterval)
-
-  const markPrice = ticker?.price ?? 0
-  const sim = useSimulatedOrders(markPrice || 0, { pairLabel: pairLabel(activePair) })
-
-  const topTicker = useMemo(() => {
-    // map to existing TopNav shape: [{symbol, price, change(number)}]
-    const out = PAIRS.slice(0, 4).map((p) => {
-      const key = p.toUpperCase()
-      const t = tickers[key]
-      return {
-        symbol: pairLabel(p),
-        price: t?.price ?? 0,
-        change: Number.parseFloat(t?.change ?? '0'),
-      }
-    })
-    return out
-  }, [tickers])
-
-  const connection = useMemo(() => {
-    const connected =
-      multiStatus === 'connected' &&
-      tickerStatus === 'connected' &&
-      bookStatus === 'connected' &&
-      candlesStatus === 'connected'
-    const anyDisconnected =
-      multiStatus === 'disconnected' ||
-      tickerStatus === 'disconnected' ||
-      bookStatus === 'disconnected' ||
-      candlesStatus === 'disconnected'
-    return connected ? 'connected' : anyDisconnected ? 'disconnected' : 'connecting'
-  }, [bookStatus, candlesStatus, multiStatus, tickerStatus])
-
-  const alerts = useMemo(
-    () => [
-      { id: 1, icon: 'bell', level: 'INFO', title: 'Volatility spike', detail: 'BTC/USD 1m ATR +18%' },
-      { id: 2, icon: 'risk', level: 'RISK', title: 'Leverage exposure', detail: 'Margin ratio > 62% (3 users)' },
-      { id: 3, icon: 'shield', level: 'WARN', title: 'Funding anomaly', detail: 'ETH perp funding deviating' },
-    ],
-    [],
-  )
+  const [selectedPair, setSelectedPair] = useState({
+    name: 'BTC/USDT',
+    price: 77685,
+    change: 0.16,
+    category: 'crypto'
+  });
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{
+      width: '100vw',
+      height: '100vh',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#010409',
+      position: 'relative',
+      fontFamily: "'Rajdhani', sans-serif",
+      color: '#dff0ff',
+      cursor: 'none'
+    }}>
+      
+      {/* 3D Background — subtle particles ONLY */}
       <ThreeBackground />
-      <GlowingArc className="pointer-events-none fixed inset-x-0 top-[68px] z-0 h-[220px] w-full opacity-65" />
-      <TopNav ticker={topTicker} connectionStatus={connection} balance={sim.balance} />
+      
+      {/* Scanline overlay */}
+      <div style={{
+        position: 'fixed', inset: 0,
+        background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,212,255,0.007) 3px, rgba(0,212,255,0.007) 4px)',
+        pointerEvents: 'none', zIndex: 3
+      }} />
 
-      <div className="pagePad" style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, paddingTop: 12 }}>
-        <div className="glass" data-reveal style={{ borderRadius: 16, marginBottom: 10, padding: '10px 12px', flexShrink: 0 }}>
-          <div data-scramble style={{ fontSize: 16, fontWeight: 900, letterSpacing: '-0.02em' }}>
-            TERMINAL COMMAND DECK
-          </div>
-        </div>
-        <div className="mobilePairHeader glass mono" style={{ flexShrink: 0 }}>
-          <span>{pairLabel(activePair)}</span>
-          <span style={{ color: ticker?.change >= 0 ? 'var(--green)' : 'var(--red)' }}>
-            ${markPrice ? markPrice.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
-          </span>
-        </div>
-        <div className="terminalGrid" style={{ flex: 1, minHeight: 0, marginBottom: 12 }} data-reveal>
-          <PairSidebar
-            pairs={PAIRS}
-            tickers={tickers}
-            selected={activePair}
-            onSelect={setActivePair}
-          />
-          <div style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <CandlestickChart
-              pair={pairLabel(activePair)}
-              interval={activeInterval}
-              onInterval={(it) => setActiveInterval(it)}
-              intervals={INTERVALS}
-              candles={candles}
-              isLoading={candlesLoading}
-              status={candlesStatus}
-            />
-          </div>
-          <OrderPanel
-            pair={pairLabel(activePair)}
-            symbol={activePair}
-            price={markPrice}
-            ticker={ticker}
-            book={book}
-            bookStatus={bookStatus}
-            balance={sim.balance}
-            positions={sim.positions}
-            placeOrder={sim.placeOrder}
-            closePosition={sim.closePosition}
-          />
-        </div>
-        <div data-reveal style={{ flexShrink: 0 }}>
-          <BottomBar positions={sim.positions} trades={sim.tradeHistory} alerts={alerts} onClose={sim.closePosition} />
-        </div>
+      {/* Nav */}
+      <div style={{ position: 'relative', zIndex: 10, flexShrink: 0 }}>
+        <TopNav selectedPair={selectedPair} />
       </div>
+
+      {/* Main trading area */}
+      <div style={{
+        display: 'flex',
+        flex: 1,
+        overflow: 'hidden',
+        position: 'relative',
+        zIndex: 5,
+        minHeight: 0
+      }}>
+        <PairSidebar 
+          selected={selectedPair.name.replace('/', '').toLowerCase()} 
+          onSelect={(key) => {
+             // Mock updating object based on string key for compatibility
+             setSelectedPair({
+               name: key.toUpperCase().replace('USDT', '/USDT'),
+               price: 77685,
+               change: 0.16,
+               category: 'crypto'
+             });
+          }} 
+        />
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          minWidth: 0,
+          borderLeft: '1px solid rgba(0,180,255,0.1)',
+          borderRight: '1px solid rgba(0,180,255,0.1)',
+          background: 'rgba(6,14,26,0.85)'
+        }}>
+          {/* Chart header */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '8px 14px',
+            borderBottom: '1px solid rgba(0,180,255,0.1)',
+            flexShrink: 0,
+            background: 'rgba(6,14,26,0.9)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={{
+                fontFamily: "'Syne', sans-serif",
+                fontSize: 19, fontWeight: 800,
+                letterSpacing: '0.05em'
+              }}>
+                {selectedPair.name}
+              </span>
+              <span style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 20, fontWeight: 700,
+                color: selectedPair.change >= 0 ? '#00e676' : '#ff3d71',
+                textShadow: selectedPair.change >= 0
+                  ? '0 0 12px rgba(0,230,118,0.4)'
+                  : '0 0 12px rgba(255,61,113,0.4)'
+              }}>
+                ${selectedPair.price.toLocaleString()}
+              </span>
+              <span style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 11,
+                color: selectedPair.change >= 0 ? '#00e676' : '#ff3d71'
+              }}>
+                {selectedPair.change >= 0 ? '▲' : '▼'} 
+                {Math.abs(selectedPair.change).toFixed(2)}%
+              </span>
+            </div>
+            {/* Timeframe buttons */}
+            <div style={{ display: 'flex', gap: 2 }}>
+              {['1M','5M','15M','1H','4H','1D'].map(tf => (
+                <button key={tf} style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 10, padding: '4px 9px',
+                  borderRadius: 3, border: 'none',
+                  background: tf === '1H'
+                    ? 'rgba(0,212,255,0.12)' : 'transparent',
+                  color: tf === '1H' ? '#00d4ff' : '#4a7a9b',
+                  cursor: 'none'
+                }}>{tf}</button>
+              ))}
+            </div>
+            {/* Indicator badges */}
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[
+                {label:'EMA 9/21', bg:'rgba(139,92,246,0.15)', 
+                 color:'#a78bfa', border:'rgba(139,92,246,0.25)'},
+                {label:'RSI', bg:'rgba(240,180,41,0.1)', 
+                 color:'#f0b429', border:'rgba(240,180,41,0.2)'},
+                {label:'VOL MA', bg:'rgba(0,212,255,0.08)', 
+                 color:'#00d4ff', border:'rgba(0,180,255,0.1)'},
+              ].map(b => (
+                <span key={b.label} style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 9, padding: '3px 8px',
+                  borderRadius: 3, letterSpacing: '0.06em',
+                  background: b.bg, color: b.color,
+                  border: `1px solid ${b.border}`
+                }}>{b.label}</span>
+              ))}
+            </div>
+          </div>
+          {/* Chart canvas */}
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>
+            <CandlestickChart pair={selectedPair.name} />
+          </div>
+        </div>
+        <OrderPanel pair={selectedPair.name} price={selectedPair.price} />
+      </div>
+
+      <BottomBar positions={[]} trades={[]} alerts={[]} />
     </div>
-  )
+  );
 }
 

@@ -4,63 +4,60 @@ import TradingTerminal from './pages/TradingTerminal.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import P2PMarketplace from './pages/P2PMarketplace.jsx'
 
-function Cursor() {
-  const dotRef = useRef(null)
-  const ringRef = useRef(null)
-  const pos = useRef({ x: 0, y: 0 })
-  const ring = useRef({ x: 0, y: 0 })
-  const raf = useRef(0)
-  const dirty = useRef(false)
+function CustomCursor() {
+  const dotRef  = useRef(null);
+  const ringRef = useRef(null);
+  let rx = 0, ry = 0;
 
   useEffect(() => {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const isCoarse = window.matchMedia('(pointer: coarse)').matches
-    if (prefersReduced || isCoarse) return undefined
-
-    let active = true
+    const dot  = dotRef.current;
+    const ring = ringRef.current;
+    let mx = 0, my = 0;
 
     const onMove = (e) => {
-      pos.current.x = e.clientX
-      pos.current.y = e.clientY
-      dirty.current = true
-    }
+      mx = e.clientX;
+      my = e.clientY;
+      dot.style.left = mx + 'px';
+      dot.style.top  = my + 'px';
+    };
 
-    const tick = () => {
-      if (!active) return
-      ring.current.x += (pos.current.x - ring.current.x) * 0.14
-      ring.current.y += (pos.current.y - ring.current.y) * 0.14
-      const r = ringRef.current
-      if (r) r.style.transform = `translate3d(${ring.current.x}px, ${ring.current.y}px, 0)`
-      if (dirty.current) {
-        const d = dotRef.current
-        if (d) d.style.transform = `translate3d(${pos.current.x}px, ${pos.current.y}px, 0)`
-        dirty.current = false
-      }
-      raf.current = requestAnimationFrame(tick)
-    }
+    const follow = () => {
+      rx += (mx - rx) * 0.15;
+      ry += (my - ry) * 0.15;
+      ring.style.left = rx + 'px';
+      ring.style.top  = ry + 'px';
+      requestAnimationFrame(follow);
+    };
 
-    const onVisibility = () => {
-      active = document.visibilityState === 'visible'
-      if (active) raf.current = requestAnimationFrame(tick)
-    }
-
-    window.addEventListener('mousemove', onMove, { passive: true })
-    document.addEventListener('visibilitychange', onVisibility)
-    raf.current = requestAnimationFrame(tick)
-    return () => {
-      active = false
-      window.removeEventListener('mousemove', onMove)
-      document.removeEventListener('visibilitychange', onVisibility)
-      cancelAnimationFrame(raf.current)
-    }
-  }, [])
+    document.addEventListener('mousemove', onMove);
+    follow();
+    return () => document.removeEventListener('mousemove', onMove);
+  }, []);
 
   return (
     <>
-      <div ref={ringRef} className="cursorRing" />
-      <div ref={dotRef} className="cursorDot" />
+      <div ref={dotRef} style={{
+        position: 'fixed',
+        width: 10, height: 10,
+        background: '#00d4ff',
+        borderRadius: '50%',
+        pointerEvents: 'none',
+        zIndex: 99999,
+        transform: 'translate(-50%,-50%)',
+        boxShadow: '0 0 12px #00d4ff',
+        transition: 'transform 0.08s'
+      }} />
+      <div ref={ringRef} style={{
+        position: 'fixed',
+        width: 32, height: 32,
+        border: '1px solid rgba(0,212,255,0.45)',
+        borderRadius: '50%',
+        pointerEvents: 'none',
+        zIndex: 99998,
+        transform: 'translate(-50%,-50%)'
+      }} />
     </>
-  )
+  );
 }
 
 function PageShell({ children }) {
@@ -70,7 +67,7 @@ function PageShell({ children }) {
 export default function App() {
   return (
     <>
-      <Cursor />
+      <CustomCursor />
       <Routes>
         <Route
           path="/"

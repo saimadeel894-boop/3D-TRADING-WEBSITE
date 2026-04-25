@@ -21,9 +21,15 @@ function fmt(n, d) {
   return n.toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec })
 }
 
-function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
+function TopNav() {
   const nav = useNavigate()
-  const items = ticker || []
+  
+  const items = [
+    { symbol: 'BTC/USDT', price: 77685.00, change: 0.16 },
+    { symbol: 'ETH/USDT', price: 3450.20, change: -1.24 },
+    { symbol: 'SOL/USDT', price: 142.60, change: 5.40 },
+    { symbol: 'BNB/USDT', price: 590.10, change: 0.80 },
+  ]
 
   const tabs = useMemo(
     () => [
@@ -99,28 +105,32 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
 
       {/* Ticker Strip */}
       <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        {items.slice(0, 4).map((it, idx) => {
+        {items.map((it, idx) => {
           const up = it.change >= 0
           return (
             <div
               key={it.symbol}
               style={{
-                minWidth: 115,
-                padding: '0 12px',
-                borderRight: idx < 3 ? '1px solid rgba(0,180,255,0.12)' : 'none',
+                minWidth: 110,
+                paddingRight: 14,
+                paddingLeft: idx > 0 ? 14 : 0,
+                borderRight: '1px solid rgba(0,180,255,0.12)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
               <div style={{ fontSize: 9, color: '#4a7a9b', fontFamily: 'JetBrains Mono', letterSpacing: '0.08em' }}>
                 {it.symbol}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono', color: up ? '#00e676' : '#ff3d71' }}>
-                ${fmt(it.price)}
-              </div>
-              <div style={{ fontSize: 9, color: up ? '#00e676' : '#ff3d71' }}>
-                {up ? '▲' : '▼'} {up ? '+' : ''}{it.change.toFixed(2)}%
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, fontFamily: 'JetBrains Mono', color: up ? '#00e676' : '#ff3d71' }}>
+                  ${fmt(it.price)}
+                </div>
+                <div style={{ fontSize: 9, color: up ? '#00e676' : '#ff3d71' }}>
+                  {up ? '▲' : '▼'} {up ? '+' : ''}{it.change.toFixed(2)}%
+                </div>
               </div>
             </div>
           )
@@ -162,7 +172,7 @@ function TopNav({ ticker, connectionStatus = 'connecting', balance = 0 }) {
           TRADE NOW
         </button>
         <div style={{ fontSize: 11, fontFamily: 'JetBrains Mono', fontWeight: 600, color: 'var(--text)' }}>
-          BAL ${fmt(balance, 0)}
+          BAL $25,000
         </div>
         <div
           style={{
